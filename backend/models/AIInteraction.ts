@@ -1,0 +1,69 @@
+import { DataTypes, Model } from 'sequelize';
+import sequelize from '../utils/database.js';
+
+class AIInteraction extends Model {
+    public id!: string;
+    public userId!: string;
+    public parentInteractionId!: string | null;
+    public projectId!: string | null;
+    public prompt!: string;
+    public response!: string;
+    public actionType!: 'plan' | 'create' | 'edit' | 'report' | 'other';
+    public metadata!: any;
+}
+
+AIInteraction.init(
+    {
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true,
+        },
+        userId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            field: 'user_id',
+        },
+        parentInteractionId: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            field: 'parent_interaction_id',
+        },
+        projectId: {
+            type: DataTypes.UUID,
+            allowNull: true,
+            field: 'project_id',
+        },
+        prompt: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        response: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        actionType: {
+            type: DataTypes.ENUM('plan', 'create', 'edit', 'report', 'other'),
+            defaultValue: 'other',
+            field: 'action_type',
+        },
+        metadata: {
+            type: DataTypes.JSONB,
+            allowNull: true,
+        },
+        isDeleted: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+            field: 'is_deleted',
+        }
+    },
+    {
+        sequelize,
+        modelName: 'AIInteraction',
+        tableName: 'ai_interactions',
+        paranoid: true,
+        underscored: true,
+    }
+);
+
+export default AIInteraction;

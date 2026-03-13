@@ -1,0 +1,46 @@
+enum Priority {
+  ONE
+  TWO
+  THREE
+  FOUR
+  FIVE
+}
+
+enum UrgentImportantMatrix {
+  URGENT_IMPORTANT
+  URGENT_NOT_IMPORTANT
+  NOT_URGENT_IMPORTANT
+  NOT_URGENT_NOT_IMPORTANT
+}
+
+enum Status {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum ProjectRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum EntityType {
+  PROJECT
+  TASK
+}
+
+enum ChangeType {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+}
+
+enum ActionType {
+  PLAN
+  CREATE
+  EDIT
+  REPORT
+  OTHER
+}

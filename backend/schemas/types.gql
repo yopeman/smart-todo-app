@@ -1,0 +1,120 @@
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  avatar: String
+  provider: String!
+  provider_id: String!
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  owned_projects: [Project!]!
+  member_projects: [ProjectMember!]!
+  ai_interactions: [AIInteraction!]!
+  project_histories: [ProjectHistory!]!
+}
+
+type Project {
+  id: ID!
+  title: String!
+  owner_id: ID!
+  description: String
+  priority: Priority
+  urgent_important_matrix: UrgentImportantMatrix
+  success_criteria: String
+  is_public: Boolean!
+  start_date: DateTime
+  end_date: DateTime
+  status: Status!
+  completed_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  owner: User!
+  tasks: [Task!]!
+  members: [ProjectMember!]!
+  histories: [ProjectHistory!]!
+  ai_interactions: [AIInteraction!]!
+}
+
+type Task {
+  id: ID!
+  project_id: ID!
+  parent_task_id: ID
+  title: String!
+  description: String
+  status: Status!
+  order_weight: Float!
+  due_date: DateTime
+  completed_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  project: Project!
+  parent_task: Task
+  subtasks: [Task!]!
+  histories: [ProjectHistory!]!
+}
+
+type ProjectMember {
+  id: ID!
+  project_id: ID!
+  user_id: ID!
+  role: ProjectRole!
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  project: Project!
+  user: User!
+}
+
+type ProjectHistory {
+  id: ID!
+  project_id: ID!
+  entity_type: EntityType!
+  entity_id: ID!
+  change_type: ChangeType!
+  change_summary: String!
+  changed_by: ID!
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  project: Project!
+  changer: User!
+}
+
+type AIInteraction {
+  id: ID!
+  user_id: ID!
+  parent_interaction_id: ID
+  project_id: ID
+  prompt: String!
+  response: String
+  action_type: ActionType!
+  metadata: JSON
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  user: User!
+  parent_interaction: AIInteraction
+  project: Project
+  child_interactions: [AIInteraction!]!
+}

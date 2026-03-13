@@ -1,0 +1,72 @@
+input CreateUserInput {
+  email: String!
+  name: String!
+  avatar: String
+  provider: String!
+  provider_id: String!
+}
+
+input UpdateUserInput {
+  name: String
+  avatar: String
+}
+
+input CreateProjectInput {
+  title: String!
+  description: String
+  priority: Priority
+  urgent_important_matrix: UrgentImportantMatrix
+  success_criteria: String
+  is_public: Boolean
+  start_date: DateTime
+  end_date: DateTime
+  status: Status
+}
+
+input UpdateProjectInput {
+  title: String
+  description: String
+  priority: Priority
+  urgent_important_matrix: UrgentImportantMatrix
+  success_criteria: String
+  is_public: Boolean
+  start_date: DateTime
+  end_date: DateTime
+  status: Status
+}
+
+input CreateTaskInput {
+  project_id: ID!
+  parent_task_id: ID
+  title: String!
+  description: String
+  status: Status
+  order_weight: Float!
+  due_date: DateTime
+}
+
+input UpdateTaskInput {
+  title: String
+  description: String
+  status: Status
+  order_weight: Float
+  due_date: DateTime
+}
+
+input AddProjectMemberInput {
+  project_id: ID!
+  user_id: ID!
+  role: ProjectRole!
+}
+
+input UpdateProjectMemberInput {
+  role: ProjectRole!
+}
+
+input CreateAIInteractionInput {
+  parent_interaction_id: ID
+  project_id: ID
+  prompt: String!
+  action_type: ActionType!
+  metadata: JSON
+}

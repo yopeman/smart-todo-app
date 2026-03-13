@@ -1,0 +1,7 @@
+#import "./scalars.gql"
+#import "./enums.gql"
+#import "./types.gql"
+#import "./inputs.gql"
+#import "./queries.gql"
+#import "./mutations.gql"
+#import "./subscriptions.gql"

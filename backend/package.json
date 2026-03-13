@@ -6,13 +6,35 @@
   "scripts": {
     "start": "node app.ts",
     "dev": "clear && nodemon --watch . --ext ts --exec tsx app.ts",
+    "db:sync": "tsx utils/sync-db.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
+  "dependencies": {
+    "@apollo/server": "^4.11.2",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.1",
+    "graphql": "^16.9.0",
+    "langchain": "^0.3.3",
+    "nodemailer": "^6.9.16",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "pg": "^8.13.1",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.37.5",
+    "validator": "^13.12.0"
+  },
   "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.1",
+    "@types/nodemailer": "^6.4.17",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.16",
+    "@types/validator": "^13.11.10",
+    "nodemon": "^3.1.7",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

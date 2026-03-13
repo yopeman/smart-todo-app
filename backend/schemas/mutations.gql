@@ -1,0 +1,29 @@
+type Mutation {
+  # User mutations
+  createUser(input: CreateUserInput!): User!
+  updateUser(id: ID!, input: UpdateUserInput!): User!
+  deleteUser(id: ID!): Boolean!
+  
+  # Project mutations
+  createProject(input: CreateProjectInput!): Project!
+  updateProject(id: ID!, input: UpdateProjectInput!): Project!
+  deleteProject(id: ID!): Boolean!
+  
+  # Task mutations
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+  deleteTask(id: ID!): Boolean!
+  reorderTasks(task_order: [ID!]!): [Task!]!
+  
+  # Project member mutations
+  addProjectMember(input: AddProjectMemberInput!): ProjectMember!
+  updateProjectMember(id: ID!, input: UpdateProjectMemberInput!): ProjectMember!
+  removeProjectMember(id: ID!): Boolean!
+  
+  # AI interaction mutations
+  createAIInteraction(input: CreateAIInteractionInput!): AIInteraction!
+  
+  # Status mutations
+  updateProjectStatus(id: ID!, status: Status!): Project!
+  updateTaskStatus(id: ID!, status: Status!): Task!
+}

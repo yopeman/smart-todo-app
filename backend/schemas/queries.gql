@@ -1,0 +1,41 @@
+type Query {
+  # User queries
+  user(id: ID!): User
+  users: [User!]!
+  me: User
+  
+  # Project queries
+  project(id: ID!): Project
+  projects(
+    status: Status
+    is_public: Boolean
+    owner_id: ID
+  ): [Project!]!
+  my_projects: [Project!]!
+  shared_projects: [Project!]!
+  
+  # Task queries
+  task(id: ID!): Task
+  tasks(
+    project_id: ID
+    status: Status
+    parent_task_id: ID
+  ): [Task!]!
+  
+  # Project member queries
+  projectMembers(project_id: ID!): [ProjectMember!]!
+  
+  # Project history queries
+  projectHistories(
+    project_id: ID!
+    entity_type: EntityType
+    change_type: ChangeType
+  ): [ProjectHistory!]!
+  
+  # AI interaction queries
+  aiInteractions(
+    project_id: ID
+    action_type: ActionType
+  ): [AIInteraction!]!
+  aiInteraction(id: ID!): AIInteraction
+}
