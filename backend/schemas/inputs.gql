@@ -1,16 +1,3 @@
-input CreateUserInput {
-  email: String!
-  name: String!
-  avatar: String
-  provider: String!
-  provider_id: String!
-}
-
-input UpdateUserInput {
-  name: String
-  avatar: String
-}
-
 input CreateProjectInput {
   title: String!
   description: String
@@ -68,5 +55,4 @@ input CreateAIInteractionInput {
   project_id: ID
   prompt: String!
   action_type: ActionType!
-  metadata: JSON
 }
