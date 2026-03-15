@@ -6,7 +6,7 @@ class Project extends Model {
     public title!: string;
     public ownerId!: string;
     public description!: string | null;
-    public priority!: number;
+    public priority!: 'HIGH' | 'MEDIUM' | 'LOW';
     public urgentImportantMatrix!: string;
     public successCriteria!: string | null;
     public isPublic!: boolean;
@@ -37,12 +37,8 @@ Project.init(
             allowNull: true,
         },
         priority: {
-            type: DataTypes.INTEGER,
-            defaultValue: 3,
-            validate: {
-                min: 1,
-                max: 5,
-            },
+            type: DataTypes.ENUM('HIGH', 'MEDIUM', 'LOW'),
+            defaultValue: 'MEDIUM',
         },
         urgentImportantMatrix: {
             type: DataTypes.ENUM(

@@ -1,9 +1,7 @@
 enum Priority {
-  ONE
-  TWO
-  THREE
-  FOUR
-  FIVE
+  HIGH
+  MEDIUM
+  LOW
 }
 
 enum UrgentImportantMatrix {
