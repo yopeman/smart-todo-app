@@ -28,7 +28,7 @@ passport.use(
             proxy: true,
         },
         async (accessToken, refreshToken, profile, done) => {
-            const user = await User.findOne({ where: { providerId: profile.id } })
+            const user = await User.findOne({ where: { providerId: profile.id }, raw: true })
             if (user) {
                 return done(null, user)
             }

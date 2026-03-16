@@ -14,7 +14,7 @@ export const getUserFromToken = async (token: string) => {
 
     if (!id) throw new Error('Invalid token')
 
-    const user = await User.findOne({ where: { id, isDeleted: false } })
+    const user = await User.findOne({ where: { id, isDeleted: false }, raw: true })
 
     if (!user) throw new Error('User not found')
     return user
