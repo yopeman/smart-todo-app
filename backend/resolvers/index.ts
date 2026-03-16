@@ -56,7 +56,20 @@ const resolvers = {
         updateTaskStatus: (_: any, { id, status }: { id: string, status: any }) => { },
     },
 
-    Subscription: {},
+    Subscription: {
+        projectUpdated: {
+            subscribe: (_: any, { project_id }: { project_id: string }) => { },
+        },
+        taskUpdated: {
+            subscribe: (_: any, { project_id }: { project_id: string }) => { },
+        },
+        projectHistoryAdded: {
+            subscribe: (_: any, { project_id }: { project_id: string }) => { },
+        },
+        aiResponseReceived: {
+            subscribe: (_: any, { interaction_id }: { interaction_id: string }) => { },
+        },
+    },
 
     // Type Resolvers
     User: userResolver.userType,
