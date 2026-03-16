@@ -10,6 +10,10 @@ class AIInteraction extends Model {
     public response!: string;
     public actionType!: 'plan' | 'create' | 'edit' | 'report' | 'other';
     public metadata!: any;
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
+    public isDeleted!: boolean;
+    public readonly deletedAt!: Date | null;
 }
 
 AIInteraction.init(

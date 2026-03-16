@@ -4,7 +4,6 @@ type User {
   name: String!
   avatar: String
   provider: String!
-  provider_id: String!
   created_at: DateTime!
   updated_at: DateTime!
   is_deleted: Boolean!

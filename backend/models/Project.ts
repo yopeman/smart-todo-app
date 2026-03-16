@@ -14,6 +14,10 @@ class Project extends Model {
     public endDate!: Date | null;
     public status!: 'todo' | 'in progress' | 'done';
     public completedAt!: Date | null;
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
+    public isDeleted!: boolean;
+    public readonly deletedAt!: Date | null;
 }
 
 Project.init(

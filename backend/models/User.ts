@@ -10,6 +10,7 @@ class User extends Model {
     public providerId!: string | null;
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
+    public isDeleted!: boolean;
     public readonly deletedAt!: Date | null;
 }
 

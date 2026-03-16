@@ -6,6 +6,10 @@ class ProjectMember extends Model {
     public projectId!: string;
     public userId!: string;
     public role!: 'admin' | 'editor' | 'viewer';
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
+    public isDeleted!: boolean;
+    public readonly deletedAt!: Date | null;
 }
 
 ProjectMember.init(

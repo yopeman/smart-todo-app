@@ -9,6 +9,10 @@ class ProjectHistory extends Model {
     public changeType!: 'create' | 'update' | 'delete' | 'status change';
     public changeSummary!: string;
     public changedBy!: string;
+    public readonly createdAt!: Date;
+    public readonly updatedAt!: Date;
+    public isDeleted!: boolean;
+    public readonly deletedAt!: Date | null;
 }
 
 ProjectHistory.init(

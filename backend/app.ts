@@ -4,11 +4,18 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import User from './models/User'
-import { createUserToken } from './utils/auth'
+import { createUserToken, getUserFromToken } from './utils/auth'
+import syncDB from './utils/sync-db'
+import { ApolloServer } from '@apollo/server'
+import { expressMiddleware } from '@apollo/server/express4'
+import { readFileSync, readdirSync } from 'fs'
+import { join } from 'path'
+import resolvers from './resolvers/index'
 
 dotenv.config()
 const app = express()
 app.use(cors())
+syncDB()
 
 passport.use(
     new GoogleStrategy(
@@ -41,10 +48,45 @@ app.get('/auth/google/callback', passport.authenticate('google', { failureRedire
     if (!req.user) {
         return res.status(401).json({ error: 'Authentication failed' })
     }
-    return res.status(201).json({
-        token: createUserToken(req.user as User)
-    })
+
+    // return res.redirect(`http://localhost:5173?token=${createUserToken(req.user as User)}`)
+    return res.status(200).json({ token: createUserToken(req.user as User) })
 })
+
+// Setup Apollo Server
+const schemaPath = join(process.cwd(), 'schemas')
+const typeDefs = readdirSync(schemaPath)
+    .filter((file) => file.endsWith('.gql'))
+    .map((file) => readFileSync(join(schemaPath, file), 'utf-8'))
+    .join('\n')
+
+const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+})
+
+await server.start()
+
+app.use(
+    '/graphql',
+    cors<cors.CorsRequest>(),
+    express.json(),
+    expressMiddleware(server, {
+        context: async ({ req }) => {
+            const auth = req.headers.authorization
+            if (auth && auth.startsWith('Bearer ')) {
+                const token = auth.split(' ')[1]
+                try {
+                    const user = await getUserFromToken(token)
+                    return { user }
+                } catch (e) {
+                    return { user: null }
+                }
+            }
+            return { user: null }
+        },
+    }) as any
+)
 
 const PORT = process.env.PORT || 7000
 app.listen(PORT, () => {
