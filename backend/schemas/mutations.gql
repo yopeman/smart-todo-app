@@ -1,6 +1,6 @@
 type Mutation {
   # User mutations
-  deleteUser(id: ID!): Boolean!
+  deleteMe: Boolean!
   
   # Project mutations
   createProject(input: CreateProjectInput!): Project!

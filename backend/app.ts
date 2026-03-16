@@ -15,6 +15,8 @@ import resolvers from './resolvers/index'
 dotenv.config()
 const app = express()
 app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 syncDB()
 
 passport.use(
@@ -23,6 +25,7 @@ passport.use(
             clientID: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
             callbackURL: process.env.GOOGLE_CALLBACK_URL!,
+            proxy: true,
         },
         async (accessToken, refreshToken, profile, done) => {
             const user = await User.findOne({ where: { providerId: profile.id } })
