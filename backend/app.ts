@@ -75,19 +75,17 @@ app.use(
     cors<cors.CorsRequest>(),
     express.json(),
     expressMiddleware(server, {
-        context: async ({ req }) => {
+        context: async ({ req, res }) => {
             const auth = req.headers.authorization
             if (auth && auth.startsWith('Bearer ')) {
                 const token = auth.split(' ')[1]
                 try {
                     const user = await getUserFromToken(token)
-                    return { user }
+                    return { user, req, res }
                 } catch (e) {
-                    console.log(e);
-                    return { user: null }
+                    return res.status(401).json({ error: 'Unauthorized' })
                 }
             }
-            return { user: null }
         },
     }) as any
 )
