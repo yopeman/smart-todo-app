@@ -12,7 +12,7 @@ export const users = async () => {
 
 export const me = async (context: any) => {
     if (!context.user) throw new Error('User not found')
-    return context.user
+    return context.user.get({ plain: true })
 }
 
 export const deleteMe = async (context: any) => {

@@ -2,22 +2,21 @@ import jwt, { JwtPayload } from 'jsonwebtoken'
 import User from '../models/User'
 import type { Request, Response, NextFunction } from 'express'
 
-interface TokenPayload extends JwtPayload {
-    id: string;
-}
-
 export const createUserToken = (user: User) => {
-    return jwt.sign({ id: user.id }, process.env.JWT_SECRET!, { expiresIn: '7d' })
+    const data = user.toJSON()
+    delete (data as any).providerId
+    return jwt.sign(data, process.env.JWT_SECRET!, { expiresIn: '180d' })
 }
 
 export const getUserFromToken = async (token: string) => {
-    const decode = jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload
-    const user = await User.findOne({ where: { id: decode.id, isDeleted: false } })
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any
+    const id = decoded.id
 
-    if (!user) {
-        throw new Error('User not found')
-    }
+    if (!id) throw new Error('Invalid token')
 
+    const user = await User.findOne({ where: { id, isDeleted: false } })
+
+    if (!user) throw new Error('User not found')
     return user
 }
 

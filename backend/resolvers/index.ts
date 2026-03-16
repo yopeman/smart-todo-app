@@ -58,6 +58,10 @@ const resolvers = {
 
     // Type Resolvers
     User: {
+        id: (user: any) => user.id || user.dataValues?.id,
+        created_at: (user: any) => user.created_at || user.createdAt || user.dataValues?.created_at || user.dataValues?.createdAt,
+        updated_at: (user: any) => user.updated_at || user.updatedAt || user.dataValues?.updated_at || user.dataValues?.updatedAt,
+        is_deleted: (user: any) => user.is_deleted ?? user.isDeleted ?? user.dataValues?.is_deleted ?? user.dataValues?.isDeleted,
         owned_projects: (user: any) => userResolver.owned_projects(user),
         member_projects: (user: any) => userResolver.member_projects(user),
         ai_interactions: (user: any) => userResolver.ai_interactions(user),

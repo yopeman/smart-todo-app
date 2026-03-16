@@ -83,6 +83,7 @@ app.use(
                     const user = await getUserFromToken(token)
                     return { user }
                 } catch (e) {
+                    console.log(e);
                     return { user: null }
                 }
             }
