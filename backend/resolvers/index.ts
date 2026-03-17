@@ -2,6 +2,7 @@ import * as userResolver from './users'
 import * as projectResolver from './projects'
 import * as taskResolver from './tasks'
 import * as projectMemberResolver from './projectMembers'
+import * as aiInteractionResolver from './aiInteractions'
 
 const resolvers = {
     Query: {
@@ -29,8 +30,9 @@ const resolvers = {
         projectHistories: (_: any, { project_id, entity_type, change_type }: { project_id: string, entity_type?: any, change_type?: any }) => { },
 
         // AI interaction queries
-        aiInteractions: (_: any, { project_id, action_type }: { project_id?: string, action_type?: any }) => { },
-        aiInteraction: (_: any, { id }: { id: string }) => { },
+        aiInteractions: (_: any, { project_id, action_type }: { project_id?: string, action_type?: any }, context: any) =>
+            aiInteractionResolver.aiInteractions(project_id, action_type, context),
+        aiInteraction: (_: any, { id }: { id: string }, context: any) => aiInteractionResolver.aiInteraction(id, context),
     },
 
     Mutation: {
@@ -57,7 +59,8 @@ const resolvers = {
             projectMemberResolver.removeProjectMember(id, context),
 
         // AI interaction mutations
-        createAIInteraction: (_: any, { input }: { input: any }) => { },
+        createAIInteraction: (_: any, { input }: { input: any }, context: any) =>
+            aiInteractionResolver.createAIInteraction(input, context),
 
         // Status mutations
         updateProjectStatus: (_: any, { id, status }: { id: string, status: any }, context: any) =>
@@ -86,18 +89,12 @@ const resolvers = {
     Project: projectResolver.projectType,
     Task: taskResolver.taskType,
     ProjectMember: projectMemberResolver.projectMemberType,
+    AIInteraction: aiInteractionResolver.aiInteractionType,
 
     ProjectHistory: {
         project: (history: any) => { },
         changer: (history: any) => { },
     },
-
-    AIInteraction: {
-        user: (interaction: any) => { },
-        parent_interaction: (interaction: any) => { },
-        project: (interaction: any) => { },
-        child_interactions: (interaction: any) => { },
-    }
 }
 
 export default resolvers
