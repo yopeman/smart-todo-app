@@ -1,6 +1,7 @@
 import * as userResolver from './users'
 import * as projectResolver from './projects'
 import * as taskResolver from './tasks'
+import * as projectMemberResolver from './projectMembers'
 
 const resolvers = {
     Query: {
@@ -21,7 +22,8 @@ const resolvers = {
             taskResolver.tasks(project_id, status, parent_task_id, context),
 
         // Project member queries
-        projectMembers: (_: any, { project_id }: { project_id: string }) => { },
+        projectMembers: (_: any, { project_id }: { project_id: string }, context: any) =>
+            projectMemberResolver.projectMembers(project_id, context),
 
         // Project history queries
         projectHistories: (_: any, { project_id, entity_type, change_type }: { project_id: string, entity_type?: any, change_type?: any }) => { },
@@ -47,9 +49,12 @@ const resolvers = {
         reorderTasks: (_: any, { task_order }: { task_order: string[] }, context: any) => taskResolver.reorderTasks(task_order, context),
 
         // Project member mutations
-        addProjectMember: (_: any, { input }: { input: any }) => { },
-        updateProjectMember: (_: any, { id, input }: { id: string, input: any }) => { },
-        removeProjectMember: (_: any, { id }: { id: string }) => { },
+        addProjectMember: (_: any, { input }: { input: any }, context: any) =>
+            projectMemberResolver.addProjectMember(input, context),
+        updateProjectMember: (_: any, { id, input }: { id: string, input: any }, context: any) =>
+            projectMemberResolver.updateProjectMember(id, input, context),
+        removeProjectMember: (_: any, { id }: { id: string }, context: any) =>
+            projectMemberResolver.removeProjectMember(id, context),
 
         // AI interaction mutations
         createAIInteraction: (_: any, { input }: { input: any }) => { },
@@ -80,11 +85,7 @@ const resolvers = {
     User: userResolver.userType,
     Project: projectResolver.projectType,
     Task: taskResolver.taskType,
-
-    ProjectMember: {
-        project: (member: any) => { },
-        user: (member: any) => { },
-    },
+    ProjectMember: projectMemberResolver.projectMemberType,
 
     ProjectHistory: {
         project: (history: any) => { },

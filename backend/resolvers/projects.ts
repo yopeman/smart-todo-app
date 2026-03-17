@@ -201,12 +201,8 @@ export const projectType = {
     owner: async (project: any) => await User.findByPk(project.ownerId, { raw: true }),
     tasks: async (project: any) => await Task.findAll({ where: { projectId: project.id, isDeleted: false }, raw: true }),
     members: async (project: any) => {
-        return await User.findAll({
-            include: [{
-                model: ProjectMember,
-                as: 'projectMemberships',
-                where: { projectId: project.id, isDeleted: false }
-            }],
+        return await ProjectMember.findAll({
+            where: { projectId: project.id, isDeleted: false },
             raw: true
         })
     },
