@@ -144,7 +144,7 @@
 
 - response
 
-- action type: `plan | create | edit | report | other`
+- action type: `create | edit | report`
 
 - metadata
 

@@ -8,7 +8,7 @@ class AIInteraction extends Model {
     public projectId!: string | null;
     public prompt!: string;
     public response!: string;
-    public actionType!: 'plan' | 'create' | 'edit' | 'report' | 'other';
+    public actionType!: 'create' | 'edit' | 'report';
     public metadata!: any;
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
@@ -47,8 +47,7 @@ AIInteraction.init(
             allowNull: false,
         },
         actionType: {
-            type: DataTypes.ENUM('plan', 'create', 'edit', 'report', 'other'),
-            defaultValue: 'other',
+            type: DataTypes.ENUM('create', 'edit', 'report'),
             field: 'action_type',
         },
         metadata: {

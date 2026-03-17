@@ -36,9 +36,7 @@ enum ChangeType {
 }
 
 enum ActionType {
-  PLAN
-  CREATE
-  EDIT
-  REPORT
-  OTHER
+  CREATE # for creating project and its tasks
+  EDIT # for editing project and its tasks
+  REPORT # for generating project and its tasks report
 }
