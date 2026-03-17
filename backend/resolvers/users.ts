@@ -28,19 +28,19 @@ export const deleteMe = async (context: any) => {
 }
 
 export const userType = {
-    id: (user: User) => user.id,
-    email: (user: User) => user.email,
-    name: (user: User) => user.name,
-    avatar: (user: User) => user.avatar,
-    provider: (user: User) => user.provider,
-    created_at: (user: User) => user.createdAt,
-    updated_at: (user: User) => user.updatedAt,
-    is_deleted: (user: User) => user.isDeleted,
-    deleted_at: (user: User) => user.deletedAt,
+    id: (user: any) => user.id,
+    email: (user: any) => user.email,
+    name: (user: any) => user.name,
+    avatar: (user: any) => user.avatar,
+    provider: (user: any) => user.provider,
+    created_at: (user: any) => user.createdAt,
+    updated_at: (user: any) => user.updatedAt,
+    is_deleted: (user: any) => user.isDeleted,
+    deleted_at: (user: any) => user.deletedAt,
     // Relationships
-    owned_projects: async (user: User) => await Project.findAll({ where: { ownerId: user.id, isDeleted: false }, raw: true }),
-    member_projects: async (user: User) => await ProjectMember.findAll({ where: { userId: user.id, isDeleted: false }, raw: true }),
-    ai_interactions: async (user: User) => await AIInteraction.findAll({ where: { userId: user.id, isDeleted: false }, raw: true }),
-    project_histories: async (user: User) => await ProjectHistory.findAll({ where: { changedBy: user.id, isDeleted: false }, raw: true }),
+    owned_projects: async (user: any) => await Project.findAll({ where: { ownerId: user.id, isDeleted: false }, raw: true }),
+    member_projects: async (user: any) => await ProjectMember.findAll({ where: { userId: user.id, isDeleted: false }, raw: true }),
+    ai_interactions: async (user: any) => await AIInteraction.findAll({ where: { userId: user.id, isDeleted: false }, raw: true }),
+    project_histories: async (user: any) => await ProjectHistory.findAll({ where: { changedBy: user.id, isDeleted: false }, raw: true }),
     
 }
