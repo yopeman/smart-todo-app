@@ -141,6 +141,21 @@ export const updateTask = async (id: string, input: any, context: any) => {
     return task.toJSON()
 }
 
+export const updateTaskStatus = async (id: string, status: unknown, context: any) => {
+    if (!context.user) throw new Error('Unauthorized')
+
+    const task = await Task.findOne({ where: { id, isDeleted: false } })
+    if (!task) throw new Error('Task not found')
+
+    await assertProjectPermission({ projectId: task.projectId, context, action: 'update' })
+
+    const nextStatus = mapStatusToEnum(status)
+    const completedAt = nextStatus === 'DONE' ? new Date() : null
+
+    await task.update({ status: nextStatus, completedAt })
+    return task.toJSON()
+}
+
 export const deleteTask = async (id: string, context: any) => {
     if (!context.user) throw new Error('Unauthorized')
     

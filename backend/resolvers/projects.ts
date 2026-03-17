@@ -138,6 +138,27 @@ export const updateProject = async (id: string, input: any, context: any) => {
     return project.toJSON()
 }
 
+export const updateProjectStatus = async (id: string, status: unknown, context: any) => {
+    if (!context.user) throw new Error('Unauthorized')
+
+    const project = await Project.findOne({ where: { id, isDeleted: false } })
+    if (!project) throw new Error('Project not found')
+
+    const member = await ProjectMember.findOne({
+        where: { projectId: id, userId: context.user.id, isDeleted: false }
+    })
+
+    const role = project.ownerId === context.user.id ? 'owner' : member?.role
+    const allowed = role ? PERMISSIONS[role]?.includes('update') : false
+    if (!allowed) throw new Error('Project not found or unauthorized')
+
+    const nextStatus = mapStatusToEnum(status)
+    const completedAt = nextStatus === 'DONE' ? new Date() : null
+
+    await project.update({ status: nextStatus, completedAt })
+    return project.toJSON()
+}
+
 export const deleteProject = async (id: string, context: any) => {
     if (!context.user) throw new Error('Unauthorized')
 

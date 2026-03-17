@@ -55,8 +55,10 @@ const resolvers = {
         createAIInteraction: (_: any, { input }: { input: any }) => { },
 
         // Status mutations
-        updateProjectStatus: (_: any, { id, status }: { id: string, status: any }) => { },
-        updateTaskStatus: (_: any, { id, status }: { id: string, status: any }) => { },
+        updateProjectStatus: (_: any, { id, status }: { id: string, status: any }, context: any) =>
+            projectResolver.updateProjectStatus(id, status, context),
+        updateTaskStatus: (_: any, { id, status }: { id: string, status: any }, context: any) =>
+            taskResolver.updateTaskStatus(id, status, context),
     },
 
     Subscription: {
