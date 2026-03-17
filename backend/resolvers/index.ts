@@ -1,4 +1,6 @@
 import * as userResolver from './users'
+import * as projectResolver from './projects'
+import * as taskResolver from './tasks'
 
 const resolvers = {
     Query: {
@@ -8,14 +10,15 @@ const resolvers = {
         me: (_: any, __: any, context: any) => userResolver.me(context),
 
         // Project queries
-        project: (_: any, { id }: { id: string }) => { },
-        projects: (_: any, { status, is_public, owner_id }: { status?: any, is_public?: boolean, owner_id?: string }) => { },
-        my_projects: () => { },
-        shared_projects: () => { },
+        project: (_: any, { id }: { id: string }, context: any) => projectResolver.project(id, context),
+        projects: (_: any, { status, is_public, owner_id }: { status?: any, is_public?: boolean, owner_id?: string }, context: any) => projectResolver.projects(context, status, is_public, owner_id),
+        my_projects: (_: any, __: any, context: any) => projectResolver.my_projects(context),
+        shared_projects: (_: any, __: any, context: any) => projectResolver.shared_projects(context),
 
         // Task queries
-        task: (_: any, { id }: { id: string }) => { },
-        tasks: (_: any, { project_id, status, parent_task_id }: { project_id?: string, status?: any, parent_task_id?: string }) => { },
+        task: (_: any, { id }: { id: string }, context: any) => taskResolver.task(id, context),
+        tasks: (_: any, { project_id, status, parent_task_id }: { project_id?: string, status?: any, parent_task_id?: string }, context: any) =>
+            taskResolver.tasks(project_id, status, parent_task_id, context),
 
         // Project member queries
         projectMembers: (_: any, { project_id }: { project_id: string }) => { },
@@ -33,15 +36,15 @@ const resolvers = {
         deleteMe: (_: any, __: any, context: any) => userResolver.deleteMe(context),
 
         // Project mutations
-        createProject: (_: any, { input }: { input: any }) => { },
-        updateProject: (_: any, { id, input }: { id: string, input: any }) => { },
-        deleteProject: (_: any, { id }: { id: string }) => { },
+        createProject: (_: any, { input }: { input: any }, context: any) => projectResolver.createProject(input, context),
+        updateProject: (_: any, { id, input }: { id: string, input: any }, context: any) => projectResolver.updateProject(id, input, context),
+        deleteProject: (_: any, { id }: { id: string }, context: any) => projectResolver.deleteProject(id, context),
 
         // Task mutations
-        createTask: (_: any, { input }: { input: any }) => { },
-        updateTask: (_: any, { id, input }: { id: string, input: any }) => { },
-        deleteTask: (_: any, { id }: { id: string }) => { },
-        reorderTasks: (_: any, { task_order }: { task_order: string[] }) => { },
+        createTask: (_: any, { input }: { input: any }, context: any) => taskResolver.createTask(input, context),
+        updateTask: (_: any, { id, input }: { id: string, input: any }, context: any) => taskResolver.updateTask(id, input, context),
+        deleteTask: (_: any, { id }: { id: string }, context: any) => taskResolver.deleteTask(id, context),
+        reorderTasks: (_: any, { task_order }: { task_order: string[] }, context: any) => taskResolver.reorderTasks(task_order, context),
 
         // Project member mutations
         addProjectMember: (_: any, { input }: { input: any }) => { },
@@ -73,21 +76,8 @@ const resolvers = {
 
     // Type Resolvers
     User: userResolver.userType,
-
-    Project: {
-        owner: (project: any) => { },
-        tasks: (project: any) => { },
-        members: (project: any) => { },
-        histories: (project: any) => { },
-        ai_interactions: (project: any) => { },
-    },
-
-    Task: {
-        project: (task: any) => { },
-        parent_task: (task: any) => { },
-        subtasks: (task: any) => { },
-        histories: (task: any) => { },
-    },
+    Project: projectResolver.projectType,
+    Task: taskResolver.taskType,
 
     ProjectMember: {
         project: (member: any) => { },

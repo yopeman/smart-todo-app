@@ -51,7 +51,7 @@ Project.init(
                 'not urgent & important',
                 'not urgent & not important'
             ),
-            allowNull: false,
+            allowNull: true,
             field: 'urgent_important_matrix',
         },
         successCriteria: {

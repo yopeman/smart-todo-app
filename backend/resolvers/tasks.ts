@@ -1,0 +1,220 @@
+import { Task, Project, ProjectMember, ProjectHistory } from '../models'
+import { Op } from 'sequelize'
+import PERMISSIONS from '../utils/projectPermissions'
+
+type ProjectAction = 'create' | 'read' | 'update' | 'delete' | 'manage_members'
+
+const mapStatusToEnum = (status: unknown) => {
+    if (!status) throw new Error('Invalid task status: empty')
+    const normalized = String(status).trim().toLowerCase()
+    if (normalized === 'todo') return 'TODO'
+    if (normalized === 'in progress' || normalized === 'in_progress') return 'IN_PROGRESS'
+    if (normalized === 'done') return 'DONE'
+
+    const asEnum = String(status).trim().toUpperCase()
+    if (asEnum === 'TODO' || asEnum === 'IN_PROGRESS' || asEnum === 'DONE') return asEnum
+    throw new Error(`Invalid task status: ${String(status)}`)
+}
+
+const resolveProjectId = (input: any): string | undefined =>
+    input?.projectId ?? input?.project_id ?? input?.projectID ?? input?.projectID
+
+const normalizeTaskInput = (input: any) => {
+    const normalized: any = {
+        title: input?.title,
+        description: input?.description,
+        status: input?.status,
+        orderWeight: input?.orderWeight ?? input?.order_weight,
+        dueDate: input?.dueDate ?? input?.due_date,
+        parentTaskId: input?.parentTaskId ?? input?.parent_task_id,
+    }
+
+    for (const key of Object.keys(normalized)) {
+        if (normalized[key] === undefined) delete normalized[key]
+    }
+
+    return normalized
+}
+
+const assertProjectPermission = async (params: {
+    projectId: string
+    context: any
+    action: ProjectAction
+}) => {
+    const { projectId, context, action } = params
+
+    const project = await Project.findOne({ where: { id: projectId, isDeleted: false }, raw: true })
+    if (!project) throw new Error('Project not found or unauthorized')
+
+    // Anonymous users can only read public projects.
+    if (!context?.user) {
+        if (action === 'read' && project.isPublic) return { project, role: 'viewer' as const }
+        throw new Error('Unauthorized')
+    }
+
+    const userId = context.user.id
+    const member = await ProjectMember.findOne({
+        where: { projectId, userId, isDeleted: false },
+        raw: true
+    })
+
+    const role = project.ownerId === userId ? 'owner' : member?.role
+    const allowed = role ? PERMISSIONS[role]?.includes(action) : false
+    if (!allowed) throw new Error('Project not found or unauthorized')
+
+    return { project, role }
+}
+
+export const task = async (id: string, context: any) => {
+    const found = await Task.findOne({ where: { id, isDeleted: false }, raw: true })
+    if (!found) throw new Error('Task not found')
+
+    await assertProjectPermission({ projectId: found.projectId, context, action: 'read' })
+    return found
+}
+
+export const tasks = async (project_id: string | undefined, status: string | undefined, parent_task_id: string | undefined, context: any) => {
+    const where: any = { isDeleted: false }
+    if (status) where.status = status
+    if (parent_task_id !== undefined) where.parentTaskId = parent_task_id
+
+    if (project_id) {
+        await assertProjectPermission({ projectId: project_id, context, action: 'read' })
+        where.projectId = project_id
+    } else {
+        // Only return tasks from projects the caller can read.
+        const userId = context?.user?.id
+        const visibilityConditions: any[] = [{ isPublic: true }]
+        if (userId) {
+            visibilityConditions.push({ ownerId: userId })
+            visibilityConditions.push({
+                id: {
+                    [Op.in]: Project.sequelize?.literal(
+                        `(SELECT project_id FROM project_members WHERE user_id = '${userId}' AND is_deleted = false)`
+                    )
+                }
+            })
+        }
+
+        const visibleProjects = await Project.findAll({
+            attributes: ['id'],
+            where: {
+                isDeleted: false,
+                [Op.or]: visibilityConditions
+            },
+            raw: true
+        })
+
+        where.projectId = { [Op.in]: visibleProjects.map((p: any) => p.id) }
+    }
+
+    return await Task.findAll({ 
+        where, 
+        order: [['orderWeight', 'ASC'], ['createdAt', 'ASC']],
+        raw: true 
+    })
+}
+
+export const createTask = async (input: any, context: any) => {
+    const projectId = resolveProjectId(input)
+    if (!projectId) throw new Error('Project not found')
+
+    await assertProjectPermission({ projectId, context, action: 'create' })
+
+    const task = await Task.create({
+        projectId,
+        ...normalizeTaskInput(input),
+    })
+    
+    return task.toJSON()
+}
+
+export const updateTask = async (id: string, input: any, context: any) => {
+    if (!context.user) throw new Error('Unauthorized')
+    
+    const task = await Task.findOne({ where: { id, isDeleted: false } })
+    if (!task) throw new Error('Task not found')
+
+    await assertProjectPermission({ projectId: task.projectId, context, action: 'update' })
+
+    await task.update(normalizeTaskInput(input))
+    return task.toJSON()
+}
+
+export const deleteTask = async (id: string, context: any) => {
+    if (!context.user) throw new Error('Unauthorized')
+    
+    const task = await Task.findOne({ where: { id, isDeleted: false } })
+    if (!task) throw new Error('Task not found')
+
+    await assertProjectPermission({ projectId: task.projectId, context, action: 'delete' })
+
+    await task.update({ 
+        isDeleted: true,
+        deletedAt: new Date()
+    })
+    return true
+}
+
+export const reorderTasks = async (task_order: string[], context: any) => {
+    if (!context.user) throw new Error('Unauthorized')
+
+    if (!task_order?.length) return []
+
+    const tasks = await Task.findAll({
+        where: { id: { [Op.in]: task_order }, isDeleted: false },
+        raw: true
+    })
+    if (tasks.length !== task_order.length) throw new Error('One or more tasks not found')
+
+    const projectId = tasks[0].projectId
+    if (tasks.some((t: any) => t.projectId !== projectId)) {
+        throw new Error('All tasks must belong to the same project')
+    }
+
+    await assertProjectPermission({ projectId, context, action: 'update' })
+
+    // Update each task's orderWeight based on index.
+    for (let i = 0; i < task_order.length; i++) {
+        await Task.update({ orderWeight: i }, { where: { id: task_order[i], isDeleted: false } })
+    }
+
+    const updated = await Task.findAll({
+        where: { id: { [Op.in]: task_order }, isDeleted: false },
+        order: [['orderWeight', 'ASC'], ['createdAt', 'ASC']],
+        raw: true
+    })
+
+    return updated
+}
+
+export const taskType = {
+    id: (task: any) => task.id,
+    project_id: (task: any) => task.projectId,
+    parent_task_id: (task: any) => task.parentTaskId,
+    title: (task: any) => task.title,
+    description: (task: any) => task.description,
+    status: (task: any) => mapStatusToEnum(task.status),
+    order_weight: (task: any) => task.orderWeight,
+    due_date: (task: any) => task.dueDate,
+    completed_at: (task: any) => task.completedAt,
+    created_at: (task: any) => task.createdAt,
+    updated_at: (task: any) => task.updatedAt,
+    is_deleted: (task: any) => task.isDeleted,
+    deleted_at: (task: any) => task.deletedAt,
+
+    project: async (task: any) => await Project.findByPk(task.projectId, { raw: true }),
+    parent_task: async (task: any) => {
+        if (!task.parentTaskId) return null
+        return await Task.findByPk(task.parentTaskId, { raw: true })
+    },
+    subtasks: async (task: any) => await Task.findAll({ where: { parentTaskId: task.id, isDeleted: false }, raw: true }),
+    histories: async (task: any) => await ProjectHistory.findAll({ 
+        where: { 
+            entityId: task.id, 
+            entityType: 'task',
+            isDeleted: false 
+        }, 
+        raw: true 
+    })
+}

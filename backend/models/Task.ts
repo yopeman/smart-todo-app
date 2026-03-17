@@ -47,7 +47,7 @@ Task.init(
             defaultValue: 'todo',
         },
         orderWeight: {
-            type: DataTypes.INTEGER,
+            type: DataTypes.FLOAT,
             defaultValue: 0,
             field: 'order_weight',
         },

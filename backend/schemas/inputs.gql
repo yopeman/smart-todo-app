@@ -28,7 +28,7 @@ input CreateTaskInput {
   title: String!
   description: String
   status: Status
-  order_weight: Float!
+  order_weight: Float
   due_date: DateTime
 }
 
