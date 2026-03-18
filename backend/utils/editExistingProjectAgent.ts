@@ -1,7 +1,6 @@
 import { Project, Task, Subtask, ProjectHistory, ProjectMember, AIInteraction, User } from "../models";
 import { ChatOllama } from '@langchain/ollama'
 import { createDeepAgent } from 'deepagents'
-import { Tool } from "@langchain/core/tools";
 import * as z from 'zod'
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
