@@ -19,6 +19,7 @@
     "@langchain/core": "^1.1.33",
     "@langchain/ollama": "^1.2.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "deepagents": "^1.8.4",
     "dotenv": "^16.6.1",
     "express": "^4.22.1",
     "graphql": "^16.9.0",
