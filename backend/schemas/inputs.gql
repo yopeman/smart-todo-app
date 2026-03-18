@@ -24,7 +24,6 @@ input UpdateProjectInput {
 
 input CreateTaskInput {
   project_id: ID!
-  parent_task_id: ID
   title: String!
   description: String
   status: Status
@@ -33,6 +32,23 @@ input CreateTaskInput {
 }
 
 input UpdateTaskInput {
+  title: String
+  description: String
+  status: Status
+  order_weight: Float
+  due_date: DateTime
+}
+
+input CreateSubtaskInput {
+  task_id: ID!
+  title: String!
+  description: String
+  status: Status
+  order_weight: Float
+  due_date: DateTime
+}
+
+input UpdateSubtaskInput {
   title: String
   description: String
   status: Status

@@ -12,6 +12,12 @@ type Mutation {
   updateTask(id: ID!, input: UpdateTaskInput!): Task!
   deleteTask(id: ID!): Boolean!
   reorderTasks(task_order: [ID!]!): [Task!]!
+
+  # Subtask mutations
+  createSubtask(input: CreateSubtaskInput!): Subtask!
+  updateSubtask(id: ID!, input: UpdateSubtaskInput!): Subtask!
+  deleteSubtask(id: ID!): Boolean!
+  reorderSubtasks(subtask_order: [ID!]!): [Subtask!]!
   
   # Project member mutations
   addProjectMember(input: AddProjectMemberInput!): ProjectMember!
@@ -24,4 +30,5 @@ type Mutation {
   # Status mutations
   updateProjectStatus(id: ID!, status: Status!): Project!
   updateTaskStatus(id: ID!, status: Status!): Task!
+  updateSubtaskStatus(id: ID!, status: Status!): Subtask!
 }

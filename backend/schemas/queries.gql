@@ -19,8 +19,14 @@ type Query {
   tasks(
     project_id: ID
     status: Status
-    parent_task_id: ID
   ): [Task!]!
+
+  # Subtask queries
+  subtask(id: ID!): Subtask
+  subtasks(
+    task_id: ID!
+    status: Status
+  ): [Subtask!]!
   
   # Project member queries
   projectMembers(project_id: ID!): [ProjectMember!]!

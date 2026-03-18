@@ -1,6 +1,7 @@
 import * as userResolver from './users'
 import * as projectResolver from './projects'
 import * as taskResolver from './tasks'
+import * as subtaskResolver from './subtasks'
 import * as projectMemberResolver from './projectMembers'
 import * as aiInteractionResolver from './aiInteractions'
 
@@ -19,8 +20,13 @@ const resolvers = {
 
         // Task queries
         task: (_: any, { id }: { id: string }, context: any) => taskResolver.task(id, context),
-        tasks: (_: any, { project_id, status, parent_task_id }: { project_id?: string, status?: any, parent_task_id?: string }, context: any) =>
-            taskResolver.tasks(project_id, status, parent_task_id, context),
+        tasks: (_: any, { project_id, status }: { project_id?: string, status?: any }, context: any) =>
+            taskResolver.tasks(project_id, status, context),
+
+        // Subtask queries
+        subtask: (_: any, { id }: { id: string }, context: any) => subtaskResolver.subtask(id, context),
+        subtasks: (_: any, { task_id, status }: { task_id: string, status?: any }, context: any) =>
+            subtaskResolver.subtasks(task_id, status, context),
 
         // Project member queries
         projectMembers: (_: any, { project_id }: { project_id: string }, context: any) =>
@@ -50,6 +56,13 @@ const resolvers = {
         deleteTask: (_: any, { id }: { id: string }, context: any) => taskResolver.deleteTask(id, context),
         reorderTasks: (_: any, { task_order }: { task_order: string[] }, context: any) => taskResolver.reorderTasks(task_order, context),
 
+        // Subtask mutations
+        createSubtask: (_: any, { input }: { input: any }, context: any) => subtaskResolver.createSubtask(input, context),
+        updateSubtask: (_: any, { id, input }: { id: string, input: any }, context: any) => subtaskResolver.updateSubtask(id, input, context),
+        deleteSubtask: (_: any, { id }: { id: string }, context: any) => subtaskResolver.deleteSubtask(id, context),
+        reorderSubtasks: (_: any, { subtask_order }: { subtask_order: string[] }, context: any) =>
+            subtaskResolver.reorderSubtasks(subtask_order, context),
+
         // Project member mutations
         addProjectMember: (_: any, { input }: { input: any }, context: any) =>
             projectMemberResolver.addProjectMember(input, context),
@@ -67,6 +80,8 @@ const resolvers = {
             projectResolver.updateProjectStatus(id, status, context),
         updateTaskStatus: (_: any, { id, status }: { id: string, status: any }, context: any) =>
             taskResolver.updateTaskStatus(id, status, context),
+        updateSubtaskStatus: (_: any, { id, status }: { id: string, status: any }, context: any) =>
+            subtaskResolver.updateSubtaskStatus(id, status, context),
     },
 
     Subscription: {
@@ -75,6 +90,9 @@ const resolvers = {
         },
         taskUpdated: {
             subscribe: (_: any, { project_id }: { project_id: string }) => { },
+        },
+        subtaskUpdated: {
+            subscribe: (_: any, { task_id }: { task_id: string }) => { },
         },
         projectHistoryAdded: {
             subscribe: (_: any, { project_id }: { project_id: string }) => { },
@@ -88,6 +106,7 @@ const resolvers = {
     User: userResolver.userType,
     Project: projectResolver.projectType,
     Task: taskResolver.taskType,
+    Subtask: subtaskResolver.subtaskType,
     ProjectMember: projectMemberResolver.projectMemberType,
     AIInteraction: aiInteractionResolver.aiInteractionType,
 

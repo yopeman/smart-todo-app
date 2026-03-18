@@ -1,9 +1,9 @@
 import { DataTypes, Model } from 'sequelize';
 import sequelize from '../utils/database.js';
 
-class Task extends Model {
+class Subtask extends Model {
     public id!: string;
-    public projectId!: string;
+    public taskId!: string;
     public title!: string;
     public description!: string | null;
     public status!: 'todo' | 'in progress' | 'done';
@@ -16,17 +16,17 @@ class Task extends Model {
     public readonly deletedAt!: Date | null;
 }
 
-Task.init(
+Subtask.init(
     {
         id: {
             type: DataTypes.UUID,
             defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
-        projectId: {
+        taskId: {
             type: DataTypes.UUID,
             allowNull: false,
-            field: 'project_id',
+            field: 'task_id',
         },
         title: {
             type: DataTypes.STRING,
@@ -63,11 +63,12 @@ Task.init(
     },
     {
         sequelize,
-        modelName: 'Task',
-        tableName: 'tasks',
+        modelName: 'Subtask',
+        tableName: 'subtasks',
         paranoid: true,
         underscored: true,
+        indexes: [{ fields: ['task_id'] }],
     }
 );
 
-export default Task;
+export default Subtask;

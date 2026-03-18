@@ -1,4 +1,4 @@
-import { Task, Project, ProjectMember, ProjectHistory } from '../models'
+import { Task, Subtask, Project, ProjectMember, ProjectHistory } from '../models'
 import { Op } from 'sequelize'
 import PERMISSIONS from '../utils/projectPermissions'
 
@@ -26,7 +26,6 @@ const normalizeTaskInput = (input: any) => {
         status: input?.status,
         orderWeight: input?.orderWeight ?? input?.order_weight,
         dueDate: input?.dueDate ?? input?.due_date,
-        parentTaskId: input?.parentTaskId ?? input?.parent_task_id,
     }
 
     for (const key of Object.keys(normalized)) {
@@ -73,10 +72,9 @@ export const task = async (id: string, context: any) => {
     return found
 }
 
-export const tasks = async (project_id: string | undefined, status: string | undefined, parent_task_id: string | undefined, context: any) => {
+export const tasks = async (project_id: string | undefined, status: string | undefined, context: any) => {
     const where: any = { isDeleted: false }
     if (status) where.status = status
-    if (parent_task_id !== undefined) where.parentTaskId = parent_task_id
 
     if (project_id) {
         await assertProjectPermission({ projectId: project_id, context, action: 'read' })
@@ -206,7 +204,6 @@ export const reorderTasks = async (task_order: string[], context: any) => {
 export const taskType = {
     id: (task: any) => task.id,
     project_id: (task: any) => task.projectId,
-    parent_task_id: (task: any) => task.parentTaskId,
     title: (task: any) => task.title,
     description: (task: any) => task.description,
     status: (task: any) => mapStatusToEnum(task.status),
@@ -219,11 +216,12 @@ export const taskType = {
     deleted_at: (task: any) => task.deletedAt,
 
     project: async (task: any) => await Project.findByPk(task.projectId, { raw: true }),
-    parent_task: async (task: any) => {
-        if (!task.parentTaskId) return null
-        return await Task.findByPk(task.parentTaskId, { raw: true })
-    },
-    subtasks: async (task: any) => await Task.findAll({ where: { parentTaskId: task.id, isDeleted: false }, raw: true }),
+    subtasks: async (task: any) =>
+        await Subtask.findAll({
+            where: { taskId: task.id, isDeleted: false },
+            order: [['orderWeight', 'ASC'], ['createdAt', 'ASC']],
+            raw: true,
+        }),
     histories: async (task: any) => await ProjectHistory.findAll({ 
         where: { 
             entityId: task.id, 

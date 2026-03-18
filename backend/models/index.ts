@@ -1,6 +1,7 @@
 import User from './User.js';
 import Project from './Project.js';
 import Task from './Task.js';
+import Subtask from './Subtask.js';
 import ProjectMember from './ProjectMember.js';
 import ProjectHistory from './ProjectHistory.js';
 import AIInteraction from './AIInteraction.js';
@@ -13,9 +14,9 @@ Project.belongsTo(User, { foreignKey: 'owner_id', as: 'owner' });
 Project.hasMany(Task, { foreignKey: 'project_id', as: 'tasks' });
 Task.belongsTo(Project, { foreignKey: 'project_id', as: 'project' });
 
-// Task <-> Task (Self-referencing for parent/child)
-Task.hasMany(Task, { foreignKey: 'parent_task_id', as: 'subTasks' });
-Task.belongsTo(Task, { foreignKey: 'parent_task_id', as: 'parentTask' });
+// Task <-> Subtask
+Task.hasMany(Subtask, { foreignKey: 'task_id', as: 'subtasks' });
+Subtask.belongsTo(Task, { foreignKey: 'task_id', as: 'task' });
 
 // User <-> Project (Members)
 User.belongsToMany(Project, {
@@ -63,6 +64,7 @@ export {
     User,
     Project,
     Task,
+    Subtask,
     ProjectMember,
     ProjectHistory,
     AIInteraction,

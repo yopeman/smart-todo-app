@@ -1,4 +1,4 @@
-import { Project, Task, ProjectHistory, ProjectMember, AIInteraction, User } from "../models";
+import { Project, Task, Subtask, ProjectHistory, ProjectMember, AIInteraction, User } from "../models";
 import { ChatOllama } from '@langchain/ollama'
 import * as z from 'zod'
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
@@ -124,9 +124,8 @@ const createProject: (input: any, context: any) => Promise<AIInteraction> = asyn
         })
 
         for (const subtask of task.subtasks) {
-            const newSubtask = await Task.create({
-                projectId: newProject.id,
-                parentTaskId: newTask.id,
+            const newSubtask = await Subtask.create({
+                taskId: newTask.id,
                 title: subtask.title,
                 description: subtask.description,
                 status: subtask.status,

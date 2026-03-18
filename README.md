@@ -90,7 +90,23 @@
 
 - project id
 
-- parent task id
+- title
+
+- description
+
+- status: `todo | in progress | done`
+
+- order_weight
+
+- due date
+
+- completed at
+
+### Subtasks
+
+- id
+
+- task id
 
 - title
 

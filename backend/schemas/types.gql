@@ -45,7 +45,6 @@ type Project {
 type Task {
   id: ID!
   project_id: ID!
-  parent_task_id: ID
   title: String!
   description: String
   status: Status!
@@ -59,9 +58,26 @@ type Task {
   
   # Relationships
   project: Project!
-  parent_task: Task
-  subtasks: [Task!]!
+  subtasks: [Subtask!]!
   histories: [ProjectHistory!]!
+}
+
+type Subtask {
+  id: ID!
+  task_id: ID!
+  title: String!
+  description: String
+  status: Status!
+  order_weight: Float!
+  due_date: DateTime
+  completed_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+
+  # Relationships
+  task: Task!
 }
 
 type ProjectMember {
