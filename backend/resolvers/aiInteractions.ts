@@ -1,6 +1,8 @@
 import { AIInteraction, Project, ProjectMember, User } from '../models'
 import PERMISSIONS from '../utils/projectPermissions'
-import * as aiProjectOperator from '../utils/aiProjectOperator'
+import createProject from '../utils/createNewProjectAgent'
+import editProject from '../utils/editExistingProjectAgent'
+import reportProject from '../utils/generateProjectReportAgent'
 
 type ProjectAction = 'create' | 'read' | 'update' | 'delete' | 'manage_members'
 
@@ -92,19 +94,19 @@ export const aiInteractions = async (project_id: string | undefined, action_type
 // Intentionally left unimplemented per request.
 export const createAIInteraction = async (input: any, context: any) => {
     if (input.action_type === 'CREATE') {
-        return await aiProjectOperator.createProject(input, context)
+        return await createProject(input, context)
     }
 
     else if (input.action_type === 'EDIT') {
         if (!input.project_id) throw new Error('Project ID is required for edit action')
         await assertProjectPermission({ projectId: input.project_id, context, action: 'update' })
-        return await aiProjectOperator.editProject(input, context)
+        return await editProject(input, context)
     }
 
     else if (input.action_type === 'REPORT') {
         if (!input.project_id) throw new Error('Project ID is required for report action')
         await assertProjectPermission({ projectId: input.project_id, context, action: 'read' })
-        return await aiProjectOperator.reportProject(input, context)
+        return await reportProject(input, context)
     }
 
     else throw new Error('Invalid action type')

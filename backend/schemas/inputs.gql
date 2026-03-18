@@ -15,7 +15,7 @@ input UpdateProjectInput {
   description: String
   priority: Priority
   urgent_important_matrix: UrgentImportantMatrix
-  success_criteria: String
+  success_criteria: [String!]
   is_public: Boolean
   start_date: DateTime
   end_date: DateTime

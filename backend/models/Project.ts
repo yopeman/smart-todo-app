@@ -8,7 +8,7 @@ class Project extends Model {
     public description!: string | null;
     public priority!: 'HIGH' | 'MEDIUM' | 'LOW';
     public urgentImportantMatrix!: string;
-    public successCriteria!: string | null;
+    public successCriteria!: string[] | null;
     public isPublic!: boolean;
     public startDate!: Date | null;
     public endDate!: Date | null;
@@ -55,7 +55,7 @@ Project.init(
             field: 'urgent_important_matrix',
         },
         successCriteria: {
-            type: DataTypes.TEXT,
+            type: DataTypes.ARRAY(DataTypes.STRING),
             allowNull: true,
             field: 'success_criteria',
         },
