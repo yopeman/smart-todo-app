@@ -112,6 +112,10 @@ export const shared_projects = async (context: any) => {
     })
 }
 
+export const public_projects = async (context: any) => {
+    return await Project.findAll({ where: { isDeleted: false, isPublic: true }, raw: true })
+}
+
 export const createProject = async (input: any, context: any) => {
     const project = await Project.create({
         ...input,

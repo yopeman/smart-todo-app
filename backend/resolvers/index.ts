@@ -17,6 +17,7 @@ const resolvers = {
         projects: (_: any, { status, is_public, owner_id }: { status?: any, is_public?: boolean, owner_id?: string }, context: any) => projectResolver.projects(context, status, is_public, owner_id),
         my_projects: (_: any, __: any, context: any) => projectResolver.my_projects(context),
         shared_projects: (_: any, __: any, context: any) => projectResolver.shared_projects(context),
+        public_projects: (_: any, __: any, context: any) => projectResolver.public_projects(context),
 
         // Task queries
         task: (_: any, { id }: { id: string }, context: any) => taskResolver.task(id, context),

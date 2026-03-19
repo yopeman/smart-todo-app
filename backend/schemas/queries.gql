@@ -13,6 +13,7 @@ type Query {
   ): [Project!]!
   my_projects: [Project!]!
   shared_projects: [Project!]!
+  public_projects: [Project!]!
   
   # Task queries
   task(id: ID!): Task
