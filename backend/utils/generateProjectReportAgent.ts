@@ -4,15 +4,15 @@ import { createDeepAgent } from 'deepagents'
 import * as z from 'zod'
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
-const projectDetailedStatsTool = async (project: Project) => {
+const projectDetailedStatsTool = async (project: any) => {
     const tasks = project.tasks || [];
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t => t.status === 'done').length;
+    const completedTasks = tasks.filter((t: any) => t.status === 'done').length;
 
     let totalSubtasks = 0;
     let completedSubtasks = 0;
 
-    tasks.forEach(task => {
+    tasks.forEach((task: any) => {
         const subtasks = (task as any).subtasks || [];
         totalSubtasks += subtasks.length;
         completedSubtasks += subtasks.filter((st: any) => st.status === 'done').length;
@@ -32,12 +32,12 @@ const projectDetailedStatsTool = async (project: Project) => {
     }, null, 2);
 }
 
-const getOverdueItemsTool = async (project: Project) => {
+const getOverdueItemsTool = async (project: any) => {
     const now = new Date();
-    const overdueTasks = (project.tasks || []).filter(t => t.dueDate && new Date(t.dueDate) < now && t.status !== 'done');
+    const overdueTasks = (project.tasks || []).filter((t: any) => t.dueDate && new Date(t.dueDate) < now && t.status !== 'done');
 
     const overdueSubtasks: any[] = [];
-    (project.tasks || []).forEach(task => {
+    (project.tasks || []).forEach((task: any) => {
         const subtasks = (task as any).subtasks || [];
         subtasks.forEach((st: any) => {
             if (st.dueDate && new Date(st.dueDate) < now && st.status !== 'done') {
@@ -49,7 +49,7 @@ const getOverdueItemsTool = async (project: Project) => {
     return JSON.stringify({ overdueTasks, overdueSubtasks }, null, 2);
 }
 
-const getDetailedHistoryTool = async (project: Project) => {
+const getDetailedHistoryTool = async (project: any) => {
     const history = await ProjectHistory.findAll({
         where: { projectId: project.id, isDeleted: false },
         order: [['createdAt', 'DESC']],
@@ -59,7 +59,7 @@ const getDetailedHistoryTool = async (project: Project) => {
     return JSON.stringify(history, null, 2);
 }
 
-const tools = (project: Project) => [
+const tools = (project: any) => [
     {
         name: 'getProjectDetailedStats',
         description: 'Get project progress statistics (tasks, subtasks, percentages).',
@@ -118,7 +118,7 @@ Before generating the report, evaluate if you have enough information to fulfill
 - Title: ${project.title}
 - Status: ${project.status}
 - Members Count: ${(project as any).projectMemberDetails?.length || 0}
-- Total Tasks Count: ${(project.tasks || []).length}
+- Total Tasks Count: ${((project as any).tasks || []).length}
 
 Use the tools to dive deeper before finalizing the report.
 Current Time: ${new Date().toLocaleString()}
