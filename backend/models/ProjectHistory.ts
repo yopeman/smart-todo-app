@@ -4,7 +4,7 @@ import sequelize from '../utils/database.js';
 class ProjectHistory extends Model {
     public id!: string;
     public projectId!: string;
-    public entityType!: 'project' | 'task';
+    public entityType!: 'project' | 'task' | 'subtask' | 'member';
     public entityId!: string;
     public changeType!: 'create' | 'update' | 'delete' | 'status change';
     public changeSummary!: string;
@@ -28,7 +28,7 @@ ProjectHistory.init(
             field: 'project_id',
         },
         entityType: {
-            type: DataTypes.ENUM('project', 'task'),
+            type: DataTypes.ENUM('project', 'task', 'subtask', 'member'),
             allowNull: false,
             field: 'entity_type',
         },

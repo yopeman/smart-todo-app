@@ -109,8 +109,12 @@ type ProjectHistory {
   deleted_at: DateTime
   
   # Relationships
-  project: Project!
+  project: Project
+  task: Task
+  subtask: Subtask
+  member: ProjectMember
   changer: User!
+  parent_project: Project!
 }
 
 type AIInteraction {

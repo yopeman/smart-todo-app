@@ -26,6 +26,8 @@ enum ProjectRole {
 enum EntityType {
   PROJECT
   TASK
+  SUBTASK
+  MEMBER
 }
 
 enum ChangeType {

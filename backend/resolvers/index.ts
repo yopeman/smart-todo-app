@@ -3,6 +3,7 @@ import * as projectResolver from './projects'
 import * as taskResolver from './tasks'
 import * as subtaskResolver from './subtasks'
 import * as projectMemberResolver from './projectMembers'
+import * as projectHistoryResolver from './projectHistories'
 import * as aiInteractionResolver from './aiInteractions'
 
 const resolvers = {
@@ -34,7 +35,8 @@ const resolvers = {
             projectMemberResolver.projectMembers(project_id, context),
 
         // Project history queries
-        projectHistories: (_: any, { project_id, entity_type, change_type }: { project_id: string, entity_type?: any, change_type?: any }) => { },
+        projectHistories: (_: any, { project_id, entity_type, change_type }: { project_id: string, entity_type?: any, change_type?: any }, context: any) =>
+            projectHistoryResolver.projectHistories(project_id, entity_type, change_type, context),
 
         // AI interaction queries
         aiInteractions: (_: any, { project_id, action_type }: { project_id?: string, action_type?: any }, context: any) =>
@@ -111,10 +113,7 @@ const resolvers = {
     ProjectMember: projectMemberResolver.projectMemberType,
     AIInteraction: aiInteractionResolver.aiInteractionType,
 
-    ProjectHistory: {
-        project: (history: any) => { },
-        changer: (history: any) => { },
-    },
+    ProjectHistory: projectHistoryResolver.projectHistoryType,
 }
 
 export default resolvers
