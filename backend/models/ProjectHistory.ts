@@ -6,7 +6,7 @@ class ProjectHistory extends Model {
     public projectId!: string;
     public entityType!: 'project' | 'task' | 'subtask' | 'member';
     public entityId!: string;
-    public changeType!: 'create' | 'update' | 'delete' | 'status change';
+    public changeType!: 'create' | 'update' | 'delete' | 'status change' | 'role change';
     public changeSummary!: string;
     public changedBy!: string;
     public readonly createdAt!: Date;
@@ -38,7 +38,7 @@ ProjectHistory.init(
             field: 'entity_id',
         },
         changeType: {
-            type: DataTypes.ENUM('create', 'update', 'delete', 'status change'),
+            type: DataTypes.ENUM('create', 'update', 'delete', 'status change', 'role change'),
             allowNull: false,
             field: 'change_type',
         },

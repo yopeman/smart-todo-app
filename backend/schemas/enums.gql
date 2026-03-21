@@ -35,6 +35,7 @@ enum ChangeType {
   UPDATE
   DELETE
   STATUS_CHANGE
+  ROLE_CHANGE
 }
 
 enum ActionType {

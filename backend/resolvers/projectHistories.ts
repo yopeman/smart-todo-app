@@ -36,9 +36,17 @@ const mapChangeTypeToEnum = (value: unknown) => {
     if (normalized === 'update') return 'UPDATE'
     if (normalized === 'delete') return 'DELETE'
     if (normalized === 'status change' || normalized === 'status_change') return 'STATUS_CHANGE'
+    if (normalized === 'role change' || normalized === 'role_change') return 'ROLE_CHANGE'
 
     const asEnum = String(value).trim().toUpperCase()
-    if (asEnum === 'CREATE' || asEnum === 'UPDATE' || asEnum === 'DELETE' || asEnum === 'STATUS_CHANGE') return asEnum
+    if (
+        asEnum === 'CREATE' ||
+        asEnum === 'UPDATE' ||
+        asEnum === 'DELETE' ||
+        asEnum === 'STATUS_CHANGE' ||
+        asEnum === 'ROLE_CHANGE'
+    )
+        return asEnum
     throw new Error(`Invalid change type: ${String(value)}`)
 }
 
@@ -49,9 +57,17 @@ const mapChangeTypeFromEnum = (value: unknown) => {
     if (normalized === 'UPDATE') return 'update'
     if (normalized === 'DELETE') return 'delete'
     if (normalized === 'STATUS_CHANGE') return 'status change'
+    if (normalized === 'ROLE_CHANGE') return 'role change'
 
     const asDbValue = String(value).trim().toLowerCase()
-    if (asDbValue === 'create' || asDbValue === 'update' || asDbValue === 'delete' || asDbValue === 'status change') return asDbValue
+    if (
+        asDbValue === 'create' ||
+        asDbValue === 'update' ||
+        asDbValue === 'delete' ||
+        asDbValue === 'status change' ||
+        asDbValue === 'role change'
+    )
+        return asDbValue
     throw new Error(`Invalid change type: ${String(value)}`)
 }
 
