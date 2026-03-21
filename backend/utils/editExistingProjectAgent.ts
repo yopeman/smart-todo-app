@@ -236,8 +236,7 @@ Current Time: ${new Date().toLocaleString()}
     ])
 
     const agentResponse = await agent.invoke({
-        input: input.prompt,
-        chat_history: chatHistory
+        messages: [...chatHistory, new HumanMessage(input.prompt)],
     })
 
     return await AIInteraction.create({
