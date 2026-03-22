@@ -1,5 +1,7 @@
 import { Project, ProjectMember, User } from '../models'
 import PERMISSIONS from '../utils/projectPermissions'
+import addProjectHistory from '../utils/addProjectHistory'
+import sendEmail from '../utils/emailService'
 
 type ProjectAction = 'create' | 'read' | 'update' | 'delete' | 'manage_members'
 type DbProjectRole = 'admin' | 'editor' | 'viewer'
@@ -92,7 +94,30 @@ export const addProjectMember = async (input: any, context: any) => {
 
     if (existing && existing.isDeleted) {
         await existing.update({ role, isDeleted: false, deletedAt: null })
-        return existing.toJSON()
+        const row = existing.toJSON()
+        await addProjectHistory(
+            projectId,
+            'member',
+            row.id,
+            'update',
+            `Member restored with role ${mapProjectRoleToEnum(role)}`,
+            context.user.id,
+        )
+
+        // Notify restored member
+        if (user.email) {
+            try {
+                await sendEmail(
+                    user.email,
+                    `Project Invitation: ${project.title}`,
+                    `Hi ${user.name},\n\nYou have been added back to the project "${project.title}" with the role: ${mapProjectRoleToEnum(role)}.`
+                )
+            } catch (error) {
+                console.error('Failed to send member restoration email:', error)
+            }
+        }
+
+        return row
     }
 
     const created = await ProjectMember.create({
@@ -100,8 +125,30 @@ export const addProjectMember = async (input: any, context: any) => {
         userId,
         role,
     })
+    const row = created.toJSON()
+    await addProjectHistory(
+        projectId,
+        'member',
+        row.id,
+        'create',
+        `Member added with role ${mapProjectRoleToEnum(role)}`,
+        context.user.id,
+    )
 
-    return created.toJSON()
+    // Notify new member
+    if (user.email) {
+        try {
+            await sendEmail(
+                user.email,
+                `Project Invitation: ${project.title}`,
+                `Hi ${user.name},\n\nYou have been added to the project "${project.title}" with the role: ${mapProjectRoleToEnum(role)}.`
+            )
+        } catch (error) {
+            console.error('Failed to send member addition email:', error)
+        }
+    }
+
+    return row
 }
 
 export const updateProjectMember = async (id: string, input: any, context: any) => {
@@ -113,9 +160,35 @@ export const updateProjectMember = async (id: string, input: any, context: any) 
     const { project } = await assertProjectPermission({ projectId: member.projectId, context, action: 'manage_members' })
     if (project.ownerId === member.userId) throw new Error('Cannot change project owner role')
 
+    const prevRole = member.role
     const role = mapProjectRoleToDb(input?.role)
     await member.update({ role })
-    return member.toJSON()
+    const updated = member.toJSON()
+    if (prevRole !== role) {
+        await addProjectHistory(
+            member.projectId,
+            'member',
+            id,
+            'role change',
+            `Role changed from ${mapProjectRoleToEnum(prevRole)} to ${mapProjectRoleToEnum(role)}`,
+            context.user.id,
+        )
+
+        // Notify member of role change
+        const user = await User.findByPk(member.userId, { raw: true })
+        if (user && user.email) {
+            try {
+                await sendEmail(
+                    user.email,
+                    `Role Updated for Project: ${project.title}`,
+                    `Hi ${user.name},\n\nYour role in the project "${project.title}" has been updated from ${mapProjectRoleToEnum(prevRole)} to ${mapProjectRoleToEnum(role)}.`
+                )
+            } catch (error) {
+                console.error('Failed to send role update email:', error)
+            }
+        }
+    }
+    return updated
 }
 
 export const removeProjectMember = async (id: string, context: any) => {
@@ -131,6 +204,29 @@ export const removeProjectMember = async (id: string, context: any) => {
         isDeleted: true,
         deletedAt: new Date(),
     })
+
+    await addProjectHistory(
+        member.projectId,
+        'member',
+        id,
+        'delete',
+        'Member removed from project',
+        context.user.id,
+    )
+
+    // Notify removed member
+    const user = await User.findByPk(member.userId, { raw: true })
+    if (user && user.email) {
+        try {
+            await sendEmail(
+                user.email,
+                `Project Removal: ${project.title}`,
+                `Hi ${user.name},\n\nYou have been removed from the project "${project.title}".`
+            )
+        } catch (error) {
+            console.error('Failed to send member removal email:', error)
+        }
+    }
 
     return true
 }

@@ -1,6 +1,8 @@
 import { Project, User, ProjectMember, Task, ProjectHistory, AIInteraction } from '../models'
 import { Op } from 'sequelize'
 import PERMISSIONS from '../utils/projectPermissions'
+import addProjectHistory from '../utils/addProjectHistory'
+import sendEmail from '../utils/emailService'
 
 const mapPriorityToEnum = (priority: unknown) => {
     if (!priority) return null
@@ -42,6 +44,24 @@ const mapStatusToEnum = (status: unknown) => {
     const asEnum = String(status).trim().toUpperCase()
     if (asEnum === 'TODO' || asEnum === 'IN_PROGRESS' || asEnum === 'DONE') return asEnum
     throw new Error(`Invalid project status: ${String(status)}`)
+}
+
+const notifyProjectAction = async (project: any, context: any, subject: string, text: string) => {
+    const recipients = new Set<string>()
+    if (context.user?.email) recipients.add(context.user.email)
+
+    if (project.ownerId !== context.user?.id) {
+        const owner = await User.findByPk(project.ownerId, { raw: true })
+        if (owner?.email) recipients.add(owner.email)
+    }
+
+    for (const email of recipients) {
+        try {
+            await sendEmail(email, subject, text)
+        } catch (error) {
+            console.error(`Failed to send email to ${email}:`, error)
+        }
+    }
 }
 
 export const project = async (id: string, context: any) => {
@@ -121,7 +141,30 @@ export const createProject = async (input: any, context: any) => {
         ...input,
         ownerId: context.user.id,
     })
-    return project.toJSON()
+    const row = project.toJSON()
+    await addProjectHistory(
+        row.id,
+        'project',
+        row.id,
+        'create',
+        `Project "${row.title}" created`,
+        context.user.id,
+    )
+
+    // Notify user on project creation
+    if (context.user && context.user.email) {
+        try {
+            await sendEmail(
+                context.user.email,
+                'Project Created',
+                `Your project "${row.title}" has been successfully created. Happy productivity!`
+            )
+        } catch (error) {
+            console.error('Failed to send project creation email:', error)
+        }
+    }
+
+    return row
 }
 
 export const updateProject = async (id: string, input: any, context: any) => {
@@ -138,8 +181,48 @@ export const updateProject = async (id: string, input: any, context: any) => {
     const allowed = role ? PERMISSIONS[role]?.includes('update') : false
     if (!allowed) throw new Error('Project not found or unauthorized')
 
+    const prevStatus = project.status
     await project.update(input)
-    return project.toJSON()
+    const updated = project.toJSON()
+    const statusChanged = prevStatus !== updated.status
+    const otherKeys = Object.keys(input ?? {}).filter((k) => k !== 'status')
+
+    if (!statusChanged && otherKeys.length === 0) return updated
+
+    if (statusChanged && !otherKeys.length) {
+        await addProjectHistory(
+            id,
+            'project',
+            id,
+            'status change',
+            `Status changed from ${prevStatus} to ${updated.status}`,
+            context.user.id,
+        )
+    } else {
+        const parts: string[] = []
+        if (statusChanged) parts.push(`status ${prevStatus} → ${updated.status}`)
+        if (otherKeys.length) parts.push(`fields: ${otherKeys.join(', ')}`)
+        await addProjectHistory(
+            id,
+            'project',
+            id,
+            'update',
+            parts.length ? parts.join('; ') : 'Project updated',
+            context.user.id,
+        )
+    }
+
+    // Notify user on project completion
+    if (updated.status === 'done' && prevStatus !== 'done') {
+        await notifyProjectAction(
+            project,
+            context,
+            'Project Completed!',
+            `Congratulations! The project "${updated.title}" has been completed.`
+        )
+    }
+
+    return updated
 }
 
 export const updateProjectStatus = async (id: string, status: unknown, context: any) => {
@@ -156,11 +239,34 @@ export const updateProjectStatus = async (id: string, status: unknown, context: 
     const allowed = role ? PERMISSIONS[role]?.includes('update') : false
     if (!allowed) throw new Error('Project not found or unauthorized')
 
+    const prevStatus = project.status
     const nextStatus = mapStatusToEnum(status)
     const completedAt = nextStatus === 'DONE' ? new Date() : null
 
-    await project.update({ status: nextStatus, completedAt })
-    return project.toJSON()
+    await project.update({ status: nextStatus.toLowerCase() as any, completedAt })
+    const updated = project.toJSON()
+    if (prevStatus !== updated.status) {
+        await addProjectHistory(
+            id,
+            'project',
+            id,
+            'status change',
+            `Status changed from ${prevStatus} to ${updated.status}`,
+            context.user.id,
+        )
+    }
+
+    // Notify user on project completion
+    if (updated.status === 'done' && prevStatus !== 'done') {
+        await notifyProjectAction(
+            project,
+            context,
+            'Project Completed!',
+            `Congratulations! The project "${updated.title}" has been completed.`
+        )
+    }
+
+    return updated
 }
 
 export const deleteProject = async (id: string, context: any) => {
@@ -181,6 +287,23 @@ export const deleteProject = async (id: string, context: any) => {
         isDeleted: true,
         deletedAt: new Date()
     })
+    await addProjectHistory(
+        id,
+        'project',
+        id,
+        'delete',
+        `Project "${project.title}" deleted`,
+        context.user.id,
+    )
+
+    // Notify user on project deletion
+    await notifyProjectAction(
+        project,
+        context,
+        'Project Deleted',
+        `The project "${project.title}" has been deleted.`
+    )
+
     return true
 }
 

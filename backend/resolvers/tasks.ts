@@ -1,6 +1,7 @@
 import { Task, Subtask, Project, ProjectMember, ProjectHistory } from '../models'
 import { Op } from 'sequelize'
 import PERMISSIONS from '../utils/projectPermissions'
+import addProjectHistory from '../utils/addProjectHistory'
 
 type ProjectAction = 'create' | 'read' | 'update' | 'delete' | 'manage_members'
 
@@ -123,8 +124,16 @@ export const createTask = async (input: any, context: any) => {
         projectId,
         ...normalizeTaskInput(input),
     })
-    
-    return task.toJSON()
+    const row = task.toJSON()
+    await addProjectHistory(
+        projectId,
+        'task',
+        row.id,
+        'create',
+        `Task "${row.title}" created`,
+        context.user.id,
+    )
+    return row
 }
 
 export const updateTask = async (id: string, input: any, context: any) => {
@@ -135,8 +144,40 @@ export const updateTask = async (id: string, input: any, context: any) => {
 
     await assertProjectPermission({ projectId: task.projectId, context, action: 'update' })
 
-    await task.update(normalizeTaskInput(input))
-    return task.toJSON()
+    const prev = task.toJSON()
+    const normalized = normalizeTaskInput(input)
+    await task.update(normalized)
+    const updated = task.toJSON()
+
+    const statusChanged = prev.status !== updated.status
+    const otherKeys = Object.keys(normalized).filter((k) => k !== 'status')
+
+    if (!statusChanged && otherKeys.length === 0) return updated
+
+    if (statusChanged && !otherKeys.length) {
+        await addProjectHistory(
+            task.projectId,
+            'task',
+            id,
+            'status change',
+            `Status changed from ${prev.status} to ${updated.status}`,
+            context.user.id,
+        )
+    } else {
+        const parts: string[] = []
+        if (statusChanged) parts.push(`status ${prev.status} → ${updated.status}`)
+        if (otherKeys.length) parts.push(`fields: ${otherKeys.join(', ')}`)
+        await addProjectHistory(
+            task.projectId,
+            'task',
+            id,
+            'update',
+            parts.length ? parts.join('; ') : 'Task updated',
+            context.user.id,
+        )
+    }
+
+    return updated
 }
 
 export const updateTaskStatus = async (id: string, status: unknown, context: any) => {
@@ -147,11 +188,23 @@ export const updateTaskStatus = async (id: string, status: unknown, context: any
 
     await assertProjectPermission({ projectId: task.projectId, context, action: 'update' })
 
+    const prevStatus = task.status
     const nextStatus = mapStatusToEnum(status)
     const completedAt = nextStatus === 'DONE' ? new Date() : null
 
     await task.update({ status: nextStatus, completedAt })
-    return task.toJSON()
+    const updated = task.toJSON()
+    if (prevStatus !== updated.status) {
+        await addProjectHistory(
+            task.projectId,
+            'task',
+            id,
+            'status change',
+            `Status changed from ${prevStatus} to ${updated.status}`,
+            context.user.id,
+        )
+    }
+    return updated
 }
 
 export const deleteTask = async (id: string, context: any) => {
@@ -166,6 +219,14 @@ export const deleteTask = async (id: string, context: any) => {
         isDeleted: true,
         deletedAt: new Date()
     })
+    await addProjectHistory(
+        task.projectId,
+        'task',
+        id,
+        'delete',
+        `Task "${task.title}" deleted`,
+        context.user.id,
+    )
     return true
 }
 
@@ -197,6 +258,15 @@ export const reorderTasks = async (task_order: string[], context: any) => {
         order: [['orderWeight', 'ASC'], ['createdAt', 'ASC']],
         raw: true
     })
+
+    await addProjectHistory(
+        projectId,
+        'project',
+        projectId,
+        'update',
+        'Task order updated',
+        context.user.id,
+    )
 
     return updated
 }

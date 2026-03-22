@@ -1,4 +1,5 @@
 import { Project, Task, Subtask, ProjectHistory, ProjectMember, AIInteraction, User } from "../models";
+import addProjectHistory from "./addProjectHistory";
 import { ChatOllama } from '@langchain/ollama'
 import { createDeepAgent } from 'deepagents'
 import * as z from 'zod'
@@ -68,56 +69,207 @@ const subtaskUpdateSchema = z.object({
 })
 
 
-const editProjectTool = async (x: any) => {
+const editProjectTool = async (x: any, context: any) => {
     const input = await projectUpdateSchema.parseAsync(x)
 
     const project = await Project.findByPk(input.id)
     if (!project) return 'Error: Project not found with the provided "id". Please verify the id is correct.'
 
+    const prev = project.toJSON()
     const updatedProject = await project.update(input)
-    return `Project updated successfully: \n\n${JSON.stringify(updatedProject.toJSON(), null, 2)}`
+    const row = updatedProject.toJSON()
+    const userId = context.user.id
+
+    if (input.isDeleted === true) {
+        await addProjectHistory(input.id, 'project', input.id, 'delete', `Project "${row.title}" deleted via AI`, userId)
+    } else if (input.status !== undefined && input.status !== prev.status) {
+        const otherKeys = Object.keys(input).filter(
+            (k) => k !== 'id' && k !== 'status' && (input as any)[k] !== undefined && (input as any)[k] !== (prev as any)[k],
+        )
+        const detail =
+            otherKeys.length > 0
+                ? `Status ${prev.status} → ${row.status}; also: ${otherKeys.join(', ')}`
+                : `Status changed from ${prev.status} to ${row.status}`
+        await addProjectHistory(
+            input.id,
+            'project',
+            input.id,
+            otherKeys.length ? 'update' : 'status change',
+            detail,
+            userId,
+        )
+    } else {
+        const keys = Object.keys(input).filter(
+            (k) => k !== 'id' && (input as any)[k] !== undefined && (input as any)[k] !== (prev as any)[k],
+        )
+        if (keys.length > 0) {
+            await addProjectHistory(
+                input.id,
+                'project',
+                input.id,
+                'update',
+                `Updated via AI: ${keys.join(', ')}`,
+                userId,
+            )
+        }
+    }
+
+    return `Project updated successfully: \n\n${JSON.stringify(row, null, 2)}`
 }
 
 
-const addNewTaskTool = async (x: any) => {
+const addNewTaskTool = async (x: any, context: any) => {
     const input = await taskCreateSchema.parseAsync(x)
 
     const project = await Project.findByPk(input.projectId)
     if (!project) return 'Error: Project not found with the provided "projectId".'
 
     const newTask = await Task.create(input)
-    return `Task created successfully: \n\n${JSON.stringify(newTask.toJSON(), null, 2)}`
+    const row = newTask.toJSON()
+    await addProjectHistory(
+        input.projectId,
+        'task',
+        row.id,
+        'create',
+        `Task "${row.title}" created via AI`,
+        context.user.id,
+    )
+    return `Task created successfully: \n\n${JSON.stringify(row, null, 2)}`
 }
 
 
-const editTaskTool = async (x: any) => {
+const editTaskTool = async (x: any, context: any) => {
     const input = await taskUpdateSchema.parseAsync(x)
 
     const task = await Task.findByPk(input.id)
     if (!task) return 'Error: Task not found with the provided "id". Please verify the id.'
 
+    const prev = task.toJSON()
+    const projectId = task.projectId
     const updatedTask = await task.update(input)
-    return `Task updated successfully: \n\n${JSON.stringify(updatedTask.toJSON(), null, 2)}`
+    const row = updatedTask.toJSON()
+    const userId = context.user.id
+
+    if (input.isDeleted === true) {
+        await addProjectHistory(projectId, 'task', input.id, 'delete', `Task "${row.title}" deleted via AI`, userId)
+    } else if (input.status !== undefined && input.status !== prev.status) {
+        const otherKeys = Object.keys(input).filter(
+            (k) =>
+                k !== 'id' &&
+                k !== 'projectId' &&
+                k !== 'status' &&
+                (input as any)[k] !== undefined &&
+                (input as any)[k] !== (prev as any)[k],
+        )
+        await addProjectHistory(
+            projectId,
+            'task',
+            input.id,
+            otherKeys.length ? 'update' : 'status change',
+            otherKeys.length
+                ? `Status ${prev.status} → ${row.status}; also: ${otherKeys.join(', ')}`
+                : `Status changed from ${prev.status} to ${row.status}`,
+            userId,
+        )
+    } else {
+        const keys = Object.keys(input).filter(
+            (k) =>
+                k !== 'id' &&
+                k !== 'projectId' &&
+                (input as any)[k] !== undefined &&
+                (input as any)[k] !== (prev as any)[k],
+        )
+        if (keys.length > 0) {
+            await addProjectHistory(
+                projectId,
+                'task',
+                input.id,
+                'update',
+                `Updated via AI: ${keys.join(', ')}`,
+                userId,
+            )
+        }
+    }
+
+    return `Task updated successfully: \n\n${JSON.stringify(row, null, 2)}`
 }
 
-const addNewSubtaskTool = async (x: any) => {
+const addNewSubtaskTool = async (x: any, context: any) => {
     const input = await subtaskCreateSchema.parseAsync(x)
 
     const task = await Task.findByPk(input.taskId)
     if (!task) return 'Error: Parent task not found. Cannot add subtask.'
 
     const newSubtask = await Subtask.create(input)
-    return `Subtask created successfully: \n\n${JSON.stringify(newSubtask.toJSON(), null, 2)}`
+    const row = newSubtask.toJSON()
+    await addProjectHistory(
+        task.projectId,
+        'subtask',
+        row.id,
+        'create',
+        `Subtask "${row.title}" created via AI`,
+        context.user.id,
+    )
+    return `Subtask created successfully: \n\n${JSON.stringify(row, null, 2)}`
 }
 
-const editSubtaskTool = async (x: any) => {
+const editSubtaskTool = async (x: any, context: any) => {
     const input = await subtaskUpdateSchema.parseAsync(x)
 
     const subtask = await Subtask.findByPk(input.id)
     if (!subtask) return 'Error: Subtask not found. Please check the id.'
 
+    const parentTask = await Task.findByPk(subtask.taskId)
+    if (!parentTask) return 'Error: Parent task not found.'
+
+    const prev = subtask.toJSON()
+    const projectId = parentTask.projectId
     const updatedSubtask = await subtask.update(input)
-    return `Subtask updated successfully: \n\n${JSON.stringify(updatedSubtask.toJSON(), null, 2)}`
+    const row = updatedSubtask.toJSON()
+    const userId = context.user.id
+
+    if (input.isDeleted === true) {
+        await addProjectHistory(projectId, 'subtask', input.id, 'delete', `Subtask "${row.title}" deleted via AI`, userId)
+    } else if (input.status !== undefined && input.status !== prev.status) {
+        const otherKeys = Object.keys(input).filter(
+            (k) =>
+                k !== 'id' &&
+                k !== 'taskId' &&
+                k !== 'status' &&
+                (input as any)[k] !== undefined &&
+                (input as any)[k] !== (prev as any)[k],
+        )
+        await addProjectHistory(
+            projectId,
+            'subtask',
+            input.id,
+            otherKeys.length ? 'update' : 'status change',
+            otherKeys.length
+                ? `Status ${prev.status} → ${row.status}; also: ${otherKeys.join(', ')}`
+                : `Status changed from ${prev.status} to ${row.status}`,
+            userId,
+        )
+    } else {
+        const keys = Object.keys(input).filter(
+            (k) =>
+                k !== 'id' &&
+                k !== 'taskId' &&
+                (input as any)[k] !== undefined &&
+                (input as any)[k] !== (prev as any)[k],
+        )
+        if (keys.length > 0) {
+            await addProjectHistory(
+                projectId,
+                'subtask',
+                input.id,
+                'update',
+                `Updated via AI: ${keys.join(', ')}`,
+                userId,
+            )
+        }
+    }
+
+    return `Subtask updated successfully: \n\n${JSON.stringify(row, null, 2)}`
 }
 
 const currentTimestamp = () => {
@@ -126,36 +278,36 @@ const currentTimestamp = () => {
 
 
 
-const tools: any = [
+const tools: any = (context: any) => [
     {
         name: 'editProject',
         description: 'Update project details like title, description, priority, etc.',
         schema: projectUpdateSchema,
-        func: editProjectTool
+        func: (x: any) => editProjectTool(x, context)
     },
     {
         name: 'addNewTask',
         description: 'Add a new task to the project.',
         schema: taskCreateSchema,
-        func: addNewTaskTool
+        func: (x: any) => addNewTaskTool(x, context)
     },
     {
         name: 'editTask',
         description: 'Edit an existing task in the project.',
         schema: taskUpdateSchema,
-        func: editTaskTool
+        func: (x: any) => editTaskTool(x, context)
     },
     {
         name: 'addNewSubtask',
         description: 'Add a new subtask to an existing task.',
         schema: subtaskCreateSchema,
-        func: addNewSubtaskTool
+        func: (x: any) => addNewSubtaskTool(x, context)
     },
     {
         name: 'editSubtask',
         description: 'Edit an existing subtask.',
         schema: subtaskUpdateSchema,
-        func: editSubtaskTool
+        func: (x: any) => editSubtaskTool(x, context)
     },
     {
         name: 'currentTimestamp',
@@ -226,7 +378,7 @@ Current Time: ${new Date().toLocaleString()}
 `.trim()
 
 
-    const agent = createDeepAgent({ model: llm, tools: tools, systemPrompt: systemPrompt })
+    const agent = createDeepAgent({ model: llm, tools: tools(context), systemPrompt: systemPrompt })
 
 
     // Build chat history

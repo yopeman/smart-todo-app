@@ -3,6 +3,7 @@ import PERMISSIONS from '../utils/projectPermissions'
 import createProject from '../utils/createNewProjectAgent'
 import editProject from '../utils/editExistingProjectAgent'
 import reportProject from '../utils/generateProjectReportAgent'
+import addProjectHistory from '../utils/addProjectHistory'
 
 type ProjectAction = 'create' | 'read' | 'update' | 'delete' | 'manage_members'
 
@@ -106,7 +107,16 @@ export const createAIInteraction = async (input: any, context: any) => {
     else if (input.action_type === 'REPORT') {
         if (!input.project_id) throw new Error('Project ID is required for report action')
         await assertProjectPermission({ projectId: input.project_id, context, action: 'read' })
-        return await reportProject(input, context)
+        const interaction = await reportProject(input, context)
+        await addProjectHistory(
+            input.project_id,
+            'project',
+            input.project_id,
+            'update',
+            'AI assistant generated a project report',
+            context.user.id,
+        )
+        return interaction
     }
 
     else throw new Error('Invalid action type')

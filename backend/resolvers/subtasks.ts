@@ -1,6 +1,7 @@
 import { Subtask, Task, Project, ProjectMember } from '../models'
 import { Op } from 'sequelize'
 import PERMISSIONS from '../utils/projectPermissions'
+import addProjectHistory from '../utils/addProjectHistory'
 
 type ProjectAction = 'create' | 'read' | 'update' | 'delete' | 'manage_members'
 
@@ -104,8 +105,16 @@ export const createSubtask = async (input: any, context: any) => {
         taskId,
         ...normalizeSubtaskInput(input),
     })
-
-    return created.toJSON()
+    const row = created.toJSON()
+    await addProjectHistory(
+        parentTask.projectId,
+        'subtask',
+        row.id,
+        'create',
+        `Subtask "${row.title}" created`,
+        context.user.id,
+    )
+    return row
 }
 
 export const updateSubtask = async (id: string, input: any, context: any) => {
@@ -117,8 +126,40 @@ export const updateSubtask = async (id: string, input: any, context: any) => {
     const parentTask = await getTaskOrThrow((found as any).taskId)
     await assertProjectPermission({ projectId: parentTask.projectId, context, action: 'update' })
 
-    await found.update(normalizeSubtaskInput(input))
-    return found.toJSON()
+    const prev = found.toJSON()
+    const normalized = normalizeSubtaskInput(input)
+    await found.update(normalized)
+    const updated = found.toJSON()
+
+    const statusChanged = prev.status !== updated.status
+    const otherKeys = Object.keys(normalized).filter((k) => k !== 'status')
+
+    if (!statusChanged && otherKeys.length === 0) return updated
+
+    if (statusChanged && !otherKeys.length) {
+        await addProjectHistory(
+            parentTask.projectId,
+            'subtask',
+            id,
+            'status change',
+            `Status changed from ${prev.status} to ${updated.status}`,
+            context.user.id,
+        )
+    } else {
+        const parts: string[] = []
+        if (statusChanged) parts.push(`status ${prev.status} → ${updated.status}`)
+        if (otherKeys.length) parts.push(`fields: ${otherKeys.join(', ')}`)
+        await addProjectHistory(
+            parentTask.projectId,
+            'subtask',
+            id,
+            'update',
+            parts.length ? parts.join('; ') : 'Subtask updated',
+            context.user.id,
+        )
+    }
+
+    return updated
 }
 
 export const updateSubtaskStatus = async (id: string, status: unknown, context: any) => {
@@ -130,11 +171,23 @@ export const updateSubtaskStatus = async (id: string, status: unknown, context: 
     const parentTask = await getTaskOrThrow((found as any).taskId)
     await assertProjectPermission({ projectId: parentTask.projectId, context, action: 'update' })
 
+    const prevStatus = found.status
     const nextStatus = mapStatusToEnum(status)
     const completedAt = nextStatus === 'DONE' ? new Date() : null
 
     await found.update({ status: nextStatus, completedAt })
-    return found.toJSON()
+    const updated = found.toJSON()
+    if (prevStatus !== updated.status) {
+        await addProjectHistory(
+            parentTask.projectId,
+            'subtask',
+            id,
+            'status change',
+            `Status changed from ${prevStatus} to ${updated.status}`,
+            context.user.id,
+        )
+    }
+    return updated
 }
 
 export const deleteSubtask = async (id: string, context: any) => {
@@ -150,6 +203,14 @@ export const deleteSubtask = async (id: string, context: any) => {
         isDeleted: true,
         deletedAt: new Date()
     })
+    await addProjectHistory(
+        parentTask.projectId,
+        'subtask',
+        id,
+        'delete',
+        `Subtask "${found.title}" deleted`,
+        context.user.id,
+    )
     return true
 }
 
@@ -173,11 +234,22 @@ export const reorderSubtasks = async (subtask_order: string[], context: any) => 
         await Subtask.update({ orderWeight: i }, { where: { id: subtask_order[i], isDeleted: false } })
     }
 
-    return await Subtask.findAll({
+    const updated = await Subtask.findAll({
         where: { id: { [Op.in]: subtask_order }, isDeleted: false },
         order: [['orderWeight', 'ASC'], ['createdAt', 'ASC']],
         raw: true
     })
+
+    await addProjectHistory(
+        parentTask.projectId,
+        'task',
+        taskId,
+        'update',
+        'Subtask order updated',
+        context.user.id,
+    )
+
+    return updated
 }
 
 export const subtaskType = {

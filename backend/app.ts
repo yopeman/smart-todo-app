@@ -6,6 +6,7 @@ import dotenv from 'dotenv'
 import User from './models/User'
 import { createUserToken, getUserFromToken } from './utils/auth'
 import syncDB from './utils/sync-db'
+import sendEmail from './utils/emailService'
 import { ApolloServer } from '@apollo/server'
 import { expressMiddleware } from '@apollo/server/express4'
 import { readFileSync, readdirSync } from 'fs'
@@ -40,6 +41,20 @@ passport.use(
                 provider: 'google',
                 providerId: profile.id,
             })
+
+            // Notify user on account creation
+            if (newUser.email) {
+                try {
+                    await sendEmail(
+                        newUser.email,
+                        'Welcome to Smart Todo App!',
+                        `Hi ${newUser.name},\n\nYour account has been successfully created. Welcome aboard!`
+                    )
+                } catch (error) {
+                    console.error('Failed to send welcome email:', error)
+                }
+            }
+
             return done(null, newUser)
         }
     )

@@ -1,4 +1,5 @@
 import { Project, Task, Subtask, AIInteraction } from "../models";
+import addProjectHistory from "./addProjectHistory";
 import { ChatOllama } from '@langchain/ollama'
 import { createDeepAgent } from 'deepagents'
 import * as z from 'zod'
@@ -49,6 +50,15 @@ const createProjectTool = async (x: any, context: any) => {
         status: input.status,
     })
 
+    await addProjectHistory(
+        newProject.id,
+        'project',
+        newProject.id,
+        'create',
+        `Project "${newProject.title}" created via AI`,
+        context.user.id,
+    )
+
     for (const task of input.tasks) {
         const newTask = await Task.create({
             projectId: newProject.id,
@@ -59,9 +69,18 @@ const createProjectTool = async (x: any, context: any) => {
             dueDate: task.due_date,
         })
 
+        await addProjectHistory(
+            newProject.id,
+            'task',
+            newTask.id,
+            'create',
+            `Task "${newTask.title}" created via AI`,
+            context.user.id,
+        )
+
         if (task.subtasks) {
             for (const subtask of task.subtasks) {
-                await Subtask.create({
+                const newSubtask = await Subtask.create({
                     taskId: newTask.id,
                     title: subtask.title,
                     description: subtask.description,
@@ -69,6 +88,14 @@ const createProjectTool = async (x: any, context: any) => {
                     orderWeight: subtask.order_weight,
                     dueDate: subtask.due_date,
                 })
+                await addProjectHistory(
+                    newProject.id,
+                    'subtask',
+                    newSubtask.id,
+                    'create',
+                    `Subtask "${newSubtask.title}" created via AI`,
+                    context.user.id,
+                )
             }
         }
     }
