@@ -1,7 +1,4 @@
 type Subscription {
   projectUpdated(project_id: ID!): Project!
-  taskUpdated(project_id: ID!): Task!
-  subtaskUpdated(task_id: ID!): Subtask!
   projectHistoryAdded(project_id: ID!): ProjectHistory!
-  aiResponseReceived(interaction_id: ID!): AIInteraction!
 }

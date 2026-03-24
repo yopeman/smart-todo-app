@@ -96,28 +96,10 @@ const resolvers = {
                 (payload, variables) => payload.projectUpdated.id === variables.project_id
             ),
         },
-        taskUpdated: {
-            subscribe: withFilter(
-                () => pubsub.asyncIterableIterator(EVENTS.TASK_UPDATED),
-                (payload, variables) => payload.taskUpdated.project_id === variables.project_id
-            ),
-        },
-        subtaskUpdated: {
-            subscribe: withFilter(
-                () => pubsub.asyncIterableIterator(EVENTS.SUBTASK_UPDATED),
-                (payload, variables) => payload.subtaskUpdated.task_id === variables.task_id
-            ),
-        },
         projectHistoryAdded: {
             subscribe: withFilter(
                 () => pubsub.asyncIterableIterator(EVENTS.PROJECT_HISTORY_ADDED),
                 (payload, variables) => payload.projectHistoryAdded.project_id === variables.project_id
-            ),
-        },
-        aiResponseReceived: {
-            subscribe: withFilter(
-                () => pubsub.asyncIterableIterator(EVENTS.AI_RESPONSE_RECEIVED),
-                (payload, variables) => payload.aiResponseReceived.parent_interaction_id === variables.interaction_id
             ),
         },
     },
