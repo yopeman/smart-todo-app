@@ -123,7 +123,7 @@ export const updateSubtask = async (id: string, input: any, context: any) => {
     const found = await Subtask.findOne({ where: { id, isDeleted: false } })
     if (!found) throw new Error('Subtask not found')
 
-    const parentTask = await getTaskOrThrow((found as any).taskId)
+    const parentTask = await getTaskOrThrow((found.toJSON() as any).taskId)
     await assertProjectPermission({ projectId: parentTask.projectId, context, action: 'update' })
 
     const prev = found.toJSON()
@@ -168,7 +168,7 @@ export const updateSubtaskStatus = async (id: string, status: unknown, context: 
     const found = await Subtask.findOne({ where: { id, isDeleted: false } })
     if (!found) throw new Error('Subtask not found')
 
-    const parentTask = await getTaskOrThrow((found as any).taskId)
+    const parentTask = await getTaskOrThrow((found.toJSON() as any).taskId)
     await assertProjectPermission({ projectId: parentTask.projectId, context, action: 'update' })
 
     const prevStatus = found.status
@@ -196,7 +196,7 @@ export const deleteSubtask = async (id: string, context: any) => {
     const found = await Subtask.findOne({ where: { id, isDeleted: false } })
     if (!found) throw new Error('Subtask not found')
 
-    const parentTask = await getTaskOrThrow((found as any).taskId)
+    const parentTask = await getTaskOrThrow((found.toJSON() as any).taskId)
     await assertProjectPermission({ projectId: parentTask.projectId, context, action: 'delete' })
 
     await found.update({
