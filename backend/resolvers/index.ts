@@ -5,6 +5,8 @@ import * as subtaskResolver from './subtasks'
 import * as projectMemberResolver from './projectMembers'
 import * as projectHistoryResolver from './projectHistories'
 import * as aiInteractionResolver from './aiInteractions'
+import { withFilter } from 'graphql-subscriptions'
+import { pubsub, EVENTS } from '../utils/pubsub'
 
 const resolvers = {
     Query: {
@@ -89,19 +91,34 @@ const resolvers = {
 
     Subscription: {
         projectUpdated: {
-            subscribe: (_: any, { project_id }: { project_id: string }) => { },
+            subscribe: withFilter(
+                () => pubsub.asyncIterableIterator(EVENTS.PROJECT_UPDATED),
+                (payload, variables) => payload.projectUpdated.id === variables.project_id
+            ),
         },
         taskUpdated: {
-            subscribe: (_: any, { project_id }: { project_id: string }) => { },
+            subscribe: withFilter(
+                () => pubsub.asyncIterableIterator(EVENTS.TASK_UPDATED),
+                (payload, variables) => payload.taskUpdated.project_id === variables.project_id
+            ),
         },
         subtaskUpdated: {
-            subscribe: (_: any, { task_id }: { task_id: string }) => { },
+            subscribe: withFilter(
+                () => pubsub.asyncIterableIterator(EVENTS.SUBTASK_UPDATED),
+                (payload, variables) => payload.subtaskUpdated.task_id === variables.task_id
+            ),
         },
         projectHistoryAdded: {
-            subscribe: (_: any, { project_id }: { project_id: string }) => { },
+            subscribe: withFilter(
+                () => pubsub.asyncIterableIterator(EVENTS.PROJECT_HISTORY_ADDED),
+                (payload, variables) => payload.projectHistoryAdded.project_id === variables.project_id
+            ),
         },
         aiResponseReceived: {
-            subscribe: (_: any, { interaction_id }: { interaction_id: string }) => { },
+            subscribe: withFilter(
+                () => pubsub.asyncIterableIterator(EVENTS.AI_RESPONSE_RECEIVED),
+                (payload, variables) => payload.aiResponseReceived.parent_interaction_id === variables.interaction_id
+            ),
         },
     },
 
