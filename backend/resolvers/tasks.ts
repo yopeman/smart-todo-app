@@ -142,7 +142,7 @@ export const updateTask = async (id: string, input: any, context: any) => {
     const task = await Task.findOne({ where: { id, isDeleted: false } })
     if (!task) throw new Error('Task not found')
 
-    await assertProjectPermission({ projectId: task.projectId, context, action: 'update' })
+    await assertProjectPermission({ projectId: task.toJSON().projectId, context, action: 'update' })
 
     const prev = task.toJSON()
     const normalized = normalizeTaskInput(input)
@@ -156,7 +156,7 @@ export const updateTask = async (id: string, input: any, context: any) => {
 
     if (statusChanged && !otherKeys.length) {
         await addProjectHistory(
-            task.projectId,
+            task.toJSON().projectId,
             'task',
             id,
             'status change',
@@ -168,7 +168,7 @@ export const updateTask = async (id: string, input: any, context: any) => {
         if (statusChanged) parts.push(`status ${prev.status} → ${updated.status}`)
         if (otherKeys.length) parts.push(`fields: ${otherKeys.join(', ')}`)
         await addProjectHistory(
-            task.projectId,
+            task.toJSON().projectId,
             'task',
             id,
             'update',
@@ -186,7 +186,7 @@ export const updateTaskStatus = async (id: string, status: unknown, context: any
     const task = await Task.findOne({ where: { id, isDeleted: false } })
     if (!task) throw new Error('Task not found')
 
-    await assertProjectPermission({ projectId: task.projectId, context, action: 'update' })
+    await assertProjectPermission({ projectId: task.toJSON().projectId, context, action: 'update' })
 
     const prevStatus = task.status
     const nextStatus = mapStatusToEnum(status)
@@ -196,7 +196,7 @@ export const updateTaskStatus = async (id: string, status: unknown, context: any
     const updated = task.toJSON()
     if (prevStatus !== updated.status) {
         await addProjectHistory(
-            task.projectId,
+            task.toJSON().projectId,
             'task',
             id,
             'status change',
@@ -213,14 +213,14 @@ export const deleteTask = async (id: string, context: any) => {
     const task = await Task.findOne({ where: { id, isDeleted: false } })
     if (!task) throw new Error('Task not found')
 
-    await assertProjectPermission({ projectId: task.projectId, context, action: 'delete' })
+    await assertProjectPermission({ projectId: task.toJSON().projectId, context, action: 'delete' })
 
     await task.update({ 
         isDeleted: true,
         deletedAt: new Date()
     })
     await addProjectHistory(
-        task.projectId,
+        task.toJSON().projectId,
         'task',
         id,
         'delete',
@@ -241,8 +241,8 @@ export const reorderTasks = async (task_order: string[], context: any) => {
     })
     if (tasks.length !== task_order.length) throw new Error('One or more tasks not found')
 
-    const projectId = tasks[0].projectId
-    if (tasks.some((t: any) => t.projectId !== projectId)) {
+    const projectId = tasks[0].toJSON().projectId
+    if (tasks.some((t: any) => t.toJSON().projectId !== projectId)) {
         throw new Error('All tasks must belong to the same project')
     }
 
