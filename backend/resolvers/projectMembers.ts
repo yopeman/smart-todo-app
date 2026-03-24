@@ -157,16 +157,16 @@ export const updateProjectMember = async (id: string, input: any, context: any) 
     const member = await ProjectMember.findOne({ where: { id, isDeleted: false } })
     if (!member) throw new Error('Project member not found')
 
-    const { project } = await assertProjectPermission({ projectId: member.projectId, context, action: 'manage_members' })
+    const { project } = await assertProjectPermission({ projectId: member.toJSON().projectId, context, action: 'manage_members' })
     if (project.ownerId === member.userId) throw new Error('Cannot change project owner role')
 
-    const prevRole = member.role
+    const prevRole = member.toJSON().role
     const role = mapProjectRoleToDb(input?.role)
     await member.update({ role })
     const updated = member.toJSON()
     if (prevRole !== role) {
         await addProjectHistory(
-            member.projectId,
+            member.toJSON().projectId,
             'member',
             id,
             'role change',
@@ -197,7 +197,7 @@ export const removeProjectMember = async (id: string, context: any) => {
     const member = await ProjectMember.findOne({ where: { id, isDeleted: false } })
     if (!member) throw new Error('Project member not found')
 
-    const { project } = await assertProjectPermission({ projectId: member.projectId, context, action: 'manage_members' })
+    const { project } = await assertProjectPermission({ projectId: member.toJSON().projectId, context, action: 'manage_members' })
     if (project.ownerId === member.userId) throw new Error('Cannot remove project owner')
 
     await member.update({
@@ -206,7 +206,7 @@ export const removeProjectMember = async (id: string, context: any) => {
     })
 
     await addProjectHistory(
-        member.projectId,
+        member.toJSON().projectId,
         'member',
         id,
         'delete',
@@ -232,10 +232,7 @@ export const removeProjectMember = async (id: string, context: any) => {
 }
 
 export const projectMemberType = {
-    id: (member: any) => {
-        console.log({member});
-        return member.id
-    },
+    id: (member: any) => member.id,
     project_id: (member: any) => member.projectId,
     user_id: (member: any) => member.userId,
     role: (member: any) => mapProjectRoleToEnum(member.role),
