@@ -182,7 +182,7 @@ export const updateProject = async (id: string, input: any, context: any) => {
         where: { projectId: id, userId: context.user.id, isDeleted: false }
     })
 
-    const role = project.ownerId === context.user.id ? 'owner' : member?.role
+    const role = project.toJSON().ownerId === context.user.id ? 'owner' : member?.role
     const allowed = role ? PERMISSIONS[role]?.includes('update') : false
     if (!allowed) throw new Error('Project not found or unauthorized')
 
@@ -240,7 +240,7 @@ export const updateProjectStatus = async (id: string, status: unknown, context: 
         where: { projectId: id, userId: context.user.id, isDeleted: false }
     })
 
-    const role = project.ownerId === context.user.id ? 'owner' : member?.role
+    const role = project.toJSON().ownerId === context.user.id ? 'owner' : member?.role
     const allowed = role ? PERMISSIONS[role]?.includes('update') : false
     if (!allowed) throw new Error('Project not found or unauthorized')
 
@@ -284,7 +284,7 @@ export const deleteProject = async (id: string, context: any) => {
         where: { projectId: id, userId: context.user.id, isDeleted: false }
     })
 
-    const role = project.ownerId === context.user.id ? 'owner' : member?.role
+    const role = project.toJSON().ownerId === context.user.id ? 'owner' : member?.role
     const allowed = role ? PERMISSIONS[role]?.includes('delete') : false
     if (!allowed) throw new Error('Project not found or unauthorized')
 
