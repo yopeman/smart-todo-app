@@ -1,7 +1,10 @@
 type Query {
   # User queries
   user(id: ID!): User
-  users: [User!]!
+  users(
+    name: String
+    email: String
+  ): [User!]!
   me: User
   
   # Project queries
@@ -10,6 +13,7 @@ type Query {
     status: Status
     is_public: Boolean
     owner_id: ID
+    title: String
   ): [Project!]!
   my_projects: [Project!]!
   shared_projects: [Project!]!

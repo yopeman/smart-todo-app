@@ -89,12 +89,17 @@ export const project = async (id: string, context: any) => {
     return project
 }
 
-export const projects = async (context: any, status?: string, is_public?: boolean, owner_id?: string) => {
+export const projects = async (context: any, status?: string, is_public?: boolean, owner_id?: string, title?: string) => {
     const userId = context.user.id
     const where: any = { isDeleted: false }
     if (status) where.status = status
     if (is_public !== undefined) where.isPublic = is_public
     if (owner_id) where.ownerId = owner_id
+    if (title) {
+        where.title = {
+            [Op.iLike]: `%${title}%`
+        }
+    }
 
     const visibilityConditions: any[] = [{ isPublic: true }]
     if (userId) {

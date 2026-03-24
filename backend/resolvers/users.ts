@@ -1,13 +1,33 @@
 import { Project, User, ProjectMember, AIInteraction, ProjectHistory } from '../models'
+import { Op } from 'sequelize'
 
 export const user = async (id: string) => {
+    console.log({id});
+    
     const user = await User.findOne({ where: { id, isDeleted: false }, raw: true })
     if (!user) throw new Error('User not found')
     return user
 }
 
-export const users = async () => {
-    return await User.findAll({ where: { isDeleted: false }, raw: true })
+export const users = async (name?: string, email?: string) => {
+    const where: any = { isDeleted: false }
+
+    console.log({name, email});
+    
+    
+    if (name) {
+        where.name = {
+            [Op.iLike]: `%${name}%`
+        }
+    }
+    
+    if (email) {
+        where.email = {
+            [Op.iLike]: `%${email}%`
+        }
+    }
+    
+    return await User.findAll({ where, raw: true })
 }
 
 export const me = async (context: any) => {

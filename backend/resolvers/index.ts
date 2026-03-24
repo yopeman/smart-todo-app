@@ -12,12 +12,12 @@ const resolvers = {
     Query: {
         // User queries
         user: (_: any, { id }: { id: string }) => userResolver.user(id),
-        users: () => userResolver.users(),
+        users: (_: any, { name, email }: { name?: string, email?: string }) => userResolver.users(name, email),
         me: (_: any, __: any, context: any) => userResolver.me(context),
 
         // Project queries
         project: (_: any, { id }: { id: string }, context: any) => projectResolver.project(id, context),
-        projects: (_: any, { status, is_public, owner_id }: { status?: any, is_public?: boolean, owner_id?: string }, context: any) => projectResolver.projects(context, status, is_public, owner_id),
+        projects: (_: any, { status, is_public, owner_id, title }: { status?: any, is_public?: boolean, owner_id?: string, title?: string }, context: any) => projectResolver.projects(context, status, is_public, owner_id, title),
         my_projects: (_: any, __: any, context: any) => projectResolver.my_projects(context),
         shared_projects: (_: any, __: any, context: any) => projectResolver.shared_projects(context),
         public_projects: (_: any, __: any, context: any) => projectResolver.public_projects(context),
