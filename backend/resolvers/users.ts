@@ -2,8 +2,6 @@ import { Project, User, ProjectMember, AIInteraction, ProjectHistory } from '../
 import { Op } from 'sequelize'
 
 export const user = async (id: string) => {
-    console.log({id});
-    
     const user = await User.findOne({ where: { id, isDeleted: false }, raw: true })
     if (!user) throw new Error('User not found')
     return user
@@ -11,9 +9,6 @@ export const user = async (id: string) => {
 
 export const users = async (name?: string, email?: string) => {
     const where: any = { isDeleted: false }
-
-    console.log({name, email});
-    
     
     if (name) {
         where.name = {
