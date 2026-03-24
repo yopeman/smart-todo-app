@@ -17,6 +17,13 @@ const mapStatusToEnum = (status: unknown) => {
     throw new Error(`Invalid task status: ${String(status)}`)
 }
 
+const backMapEnumToStatus = (status: string) => {
+    if (status === 'TODO') return 'todo'
+    if (status === 'IN_PROGRESS') return 'in progress'
+    if (status === 'DONE') return 'done'
+    return status
+}
+
 const normalizeSubtaskInput = (input: any) => {
     const normalized: any = {
         title: input?.title,
@@ -175,7 +182,7 @@ export const updateSubtaskStatus = async (id: string, status: unknown, context: 
     const nextStatus = mapStatusToEnum(status)
     const completedAt = nextStatus === 'DONE' ? new Date() : null
 
-    await found.update({ status: nextStatus, completedAt })
+    await found.update({ status: backMapEnumToStatus(nextStatus), completedAt })
     const updated = found.toJSON()
     if (prevStatus !== updated.status) {
         await addProjectHistory(

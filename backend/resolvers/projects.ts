@@ -46,6 +46,13 @@ const mapStatusToEnum = (status: unknown) => {
     throw new Error(`Invalid project status: ${String(status)}`)
 }
 
+const backMapEnumToStatus = (status: string) => {
+    if (status === 'TODO') return 'todo'
+    if (status === 'IN_PROGRESS') return 'in progress'
+    if (status === 'DONE') return 'done'
+    return status
+}
+
 const notifyProjectAction = async (project: any, context: any, subject: string, text: string) => {
     const recipients = new Set<string>()
     if (context.user?.email) recipients.add(context.user.email)
@@ -248,7 +255,7 @@ export const updateProjectStatus = async (id: string, status: unknown, context: 
     const nextStatus = mapStatusToEnum(status)
     const completedAt = nextStatus === 'DONE' ? new Date() : null
 
-    await project.update({ status: nextStatus.toLowerCase() as any, completedAt })
+    await project.update({ status: backMapEnumToStatus(nextStatus), completedAt })    
     const updated = project.toJSON()
     if (prevStatus !== updated.status) {
         await addProjectHistory(
