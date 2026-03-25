@@ -248,8 +248,8 @@ export const reorderTasks = async (task_order: string[], context: any) => {
     })
     if (tasks.length !== task_order.length) throw new Error('One or more tasks not found')
 
-    const projectId = tasks[0].toJSON().projectId
-    if (tasks.some((t: any) => t.toJSON().projectId !== projectId)) {
+    const projectId = tasks[0].projectId
+    if (tasks.some((t: any) => t.projectId !== projectId)) {
         throw new Error('All tasks must belong to the same project')
     }
 

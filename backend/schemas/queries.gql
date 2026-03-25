@@ -22,7 +22,7 @@ type Query {
   # Task queries
   task(id: ID!): Task
   tasks(
-    project_id: ID
+    project_id: ID!
     status: Status
   ): [Task!]!
 
