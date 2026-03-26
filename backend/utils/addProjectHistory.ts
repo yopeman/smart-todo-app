@@ -25,14 +25,10 @@ const addProjectHistory = async (
         changedBy,
     })
 
-    const row = history.get({ plain: true })
-    pubsub.publish(EVENTS.PROJECT_HISTORY_ADDED, { projectHistoryAdded: row })
-
-    if (['project', 'task', 'subtask'].includes(entityType)) {
-        pubsub.publish(EVENTS.PROJECT_UPDATED, { projectUpdated: project })
-    }
+    pubsub.publish(EVENTS.PROJECT_HISTORY_ADDED, { projectHistoryAdded: history.toJSON() })
+    pubsub.publish(EVENTS.PROJECT_UPDATED, { projectUpdated: project.toJSON() })
     
-    return row
+    return history.toJSON()
 }
 
 export default addProjectHistory

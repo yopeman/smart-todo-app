@@ -99,7 +99,7 @@ const resolvers = {
         projectHistoryAdded: {
             subscribe: withFilter(
                 () => pubsub.asyncIterableIterator(EVENTS.PROJECT_HISTORY_ADDED),
-                (payload, variables) => payload.projectHistoryAdded.project_id === variables.project_id
+                (payload, variables) => payload.projectHistoryAdded.projectId === variables.project_id
             ),
         },
     },

@@ -9,12 +9,18 @@ import syncDB from './utils/sync-db'
 import sendEmail from './utils/emailService'
 import { ApolloServer } from '@apollo/server'
 import { expressMiddleware } from '@apollo/server/express4'
+import { makeExecutableSchema } from '@graphql-tools/schema'
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import { WebSocketServer } from 'ws'
+import { useServer } from 'graphql-ws/use/ws'
 import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
+import { createServer } from 'http'
 import resolvers from './resolvers/index'
 
 dotenv.config()
 const app = express()
+const httpServer = createServer(app)
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -78,9 +84,30 @@ const typeDefs = readdirSync(schemaPath)
     .map((file) => readFileSync(join(schemaPath, file), 'utf-8'))
     .join('\n')
 
+// Create WebSocket server
+const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: '/graphql',
+})
+
+// Set up WebSocket server for GraphQL subscriptions
+const serverCleanup = useServer({ schema: makeExecutableSchema({ typeDefs, resolvers }) }, wsServer)
+
 const server = new ApolloServer({
     typeDefs,
     resolvers,
+    plugins: [
+        ApolloServerPluginDrainHttpServer({ httpServer }),
+        {
+            async serverWillStart() {
+                return {
+                    async drainServer() {
+                        await serverCleanup.dispose()
+                    },
+                }
+            },
+        },
+    ],
 })
 
 await server.start()
@@ -106,6 +133,8 @@ app.use(
 )
 
 const PORT = process.env.PORT || 7000
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}. \nSee http://localhost:${PORT}`)
+    console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`)
+    console.log(`GraphQL subscriptions endpoint: ws://localhost:${PORT}/graphql`)
 })
