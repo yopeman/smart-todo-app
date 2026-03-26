@@ -125,16 +125,17 @@ app.use(
                     const user = await getUserFromToken(token)
                     return { user, req, res }
                 } catch (e) {
-                    return res.status(401).json({ error: 'Unauthorized' })
+                    throw new Error('Unauthorized')
                 }
             }
+            return { req, res }
         },
     }) as any
 )
 
 const PORT = process.env.PORT || 7000
 httpServer.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}. \nSee http://localhost:${PORT}`)
+    console.log(`Server is running on port ${PORT}`)
     console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`)
     console.log(`GraphQL subscriptions endpoint: ws://localhost:${PORT}/graphql`)
 })
