@@ -118,17 +118,14 @@ app.use(
     express.json(),
     expressMiddleware(server, {
         context: async ({ req, res }) => {
-            const auth = req.headers.authorization
-            if (auth && auth.startsWith('Bearer ')) {
-                const token = auth.split(' ')[1]
-                try {
-                    const user = await getUserFromToken(token)
-                    return { user, req, res }
-                } catch (e) {
-                    throw new Error('Unauthorized')
-                }
+            try {
+                const auth = req.headers.authorization
+                const token = auth?.split(' ')[1]
+                const user = await getUserFromToken(token!)
+                return { user, req, res }
+            } catch (error) {
+                throw error
             }
-            return { req, res }
         },
     }) as any
 )
