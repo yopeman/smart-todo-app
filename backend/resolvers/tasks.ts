@@ -144,8 +144,6 @@ export const createTask = async (input: any, context: any) => {
 }
 
 export const updateTask = async (id: string, input: any, context: any) => {
-    if (!context.user) throw new Error('Unauthorized')
-    
     const task = await Task.findOne({ where: { id, isDeleted: false } })
     if (!task) throw new Error('Task not found')
 
@@ -188,8 +186,6 @@ export const updateTask = async (id: string, input: any, context: any) => {
 }
 
 export const updateTaskStatus = async (id: string, status: unknown, context: any) => {
-    if (!context.user) throw new Error('Unauthorized')
-
     const task = await Task.findOne({ where: { id, isDeleted: false } })
     if (!task) throw new Error('Task not found')
 
@@ -215,8 +211,6 @@ export const updateTaskStatus = async (id: string, status: unknown, context: any
 }
 
 export const deleteTask = async (id: string, context: any) => {
-    if (!context.user) throw new Error('Unauthorized')
-    
     const task = await Task.findOne({ where: { id, isDeleted: false } })
     if (!task) throw new Error('Task not found')
 
@@ -238,8 +232,6 @@ export const deleteTask = async (id: string, context: any) => {
 }
 
 export const reorderTasks = async (task_order: string[], context: any) => {
-    if (!context.user) throw new Error('Unauthorized')
-
     if (!task_order?.length) return []
 
     const tasks = await Task.findAll({

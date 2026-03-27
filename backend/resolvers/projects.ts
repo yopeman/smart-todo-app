@@ -180,8 +180,6 @@ export const createProject = async (input: any, context: any) => {
 }
 
 export const updateProject = async (id: string, input: any, context: any) => {
-    if (!context.user) throw new Error('Unauthorized')
-
     const project = await Project.findOne({ where: { id, isDeleted: false } })
     if (!project) throw new Error('Project not found')
 
@@ -238,8 +236,6 @@ export const updateProject = async (id: string, input: any, context: any) => {
 }
 
 export const updateProjectStatus = async (id: string, status: unknown, context: any) => {
-    if (!context.user) throw new Error('Unauthorized')
-
     const project = await Project.findOne({ where: { id, isDeleted: false } })
     if (!project) throw new Error('Project not found')
 
@@ -282,8 +278,6 @@ export const updateProjectStatus = async (id: string, status: unknown, context: 
 }
 
 export const deleteProject = async (id: string, context: any) => {
-    if (!context.user) throw new Error('Unauthorized')
-
     const project = await Project.findOne({ where: { id, isDeleted: false } })
     if (!project) throw new Error('Project not found')
 
