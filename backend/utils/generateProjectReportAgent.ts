@@ -1,5 +1,6 @@
 import { Project, Task, Subtask, ProjectHistory, ProjectMember, AIInteraction, User } from "../models";
 import { ChatOllama } from '@langchain/ollama'
+import { ChatGroq } from '@langchain/groq'
 import { createAgent, tool } from "langchain";
 import * as z from 'zod'
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
@@ -54,7 +55,8 @@ const getDetailedHistoryTool = async (project: any) => {
         where: { projectId: project.id, isDeleted: false },
         order: [['createdAt', 'DESC']],
         limit: 20,
-        include: [{ model: User, as: 'editor', attributes: ['username', 'email'] }]
+        include: [{ model: User, as: 'editor', attributes: ['username', 'email'] }],
+        raw: true
     });
     return JSON.stringify(history, null, 2);
 }
@@ -64,21 +66,25 @@ const tools = (project: any) => [
     {
         name: 'getProjectDetailedStats',
         description: 'Get project progress statistics (tasks, subtasks, percentages).',
+        schema: z.object({}),
     }),
     tool( async () => getOverdueItemsTool(project),
     {
         name: 'getOverdueItems',
         description: 'Identify tasks and subtasks that are overdue.',
+        schema: z.object({})
     }),
     tool( async () => await getDetailedHistoryTool(project),
     {
         name: 'getDetailedHistory',
         description: 'Get the last 20 changes made to the project.',
+        schema: z.object({})
     })
 ];
 
 const reportProject: (input: any, context: any) => Promise<AIInteraction> = async (input: any, context: any) => {
-    const llm = new ChatOllama({ model: 'qwen2.5:0.5b' })
+    // const llm = new ChatOllama({ model: 'qwen2.5:0.5b' })
+    const llm = new ChatGroq({model: 'llama-3.3-70b-versatile'})
 
     const project = await Project.findOne({
         where: { id: input.project_id, isDeleted: false },
@@ -93,7 +99,8 @@ const reportProject: (input: any, context: any) => Promise<AIInteraction> = asyn
                 as: 'projectMemberDetails',
                 include: [{ model: User }]
             }
-        ]
+        ],
+        raw: true
     });
 
     if (!project) throw new Error('Project not found');
