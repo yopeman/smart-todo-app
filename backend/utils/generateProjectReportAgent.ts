@@ -89,7 +89,7 @@ const getDetailedHistoryTool = async (projectId: string) => {
     where: { projectId, isDeleted: false },
     order: [['createdAt', 'DESC']],
     limit: 20,
-    include: [{ model: User, as: 'editor', attributes: ['name', 'email'] }],
+    include: [{ model: User, as: 'editor', attributes: { exclude: ['providerId'] } }],
     raw: true,
   });
   return JSON.stringify(history, null, 2);
@@ -98,7 +98,7 @@ const getDetailedHistoryTool = async (projectId: string) => {
 const getProjectMembersTool = async (projectId: string) => {
   const members = await ProjectMember.findAll({
     where: { projectId, isDeleted: false },
-    include: [{ model: User, as: 'user', attributes: ['name', 'email'] }],
+    include: [{ model: User, as: 'user', attributes: { exclude: ['providerId'] } }],
     raw: true,
   });
   return JSON.stringify(members, null, 2);
