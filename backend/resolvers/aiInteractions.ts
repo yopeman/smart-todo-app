@@ -95,13 +95,15 @@ export const aiInteractions = async (project_id: string | undefined, action_type
 // Intentionally left unimplemented per request.
 export const createAIInteraction = async (input: any, context: any) => {
     if (input.action_type === 'CREATE') {
-        return await createProject(input, context)
+        const interaction = await createProject(input, context)
+        return interaction.toJSON()
     }
 
     else if (input.action_type === 'EDIT') {
         if (!input.project_id) throw new Error('Project ID is required for edit action')
         await assertProjectPermission({ projectId: input.project_id, context, action: 'update' })
-        return await editProject(input, context)
+        const interaction = await editProject(input, context)
+        return interaction.toJSON()
     }
 
     else if (input.action_type === 'REPORT') {
@@ -116,7 +118,7 @@ export const createAIInteraction = async (input: any, context: any) => {
             'AI assistant generated a project report',
             context.user.id,
         )
-        return interaction
+        return interaction.toJSON()
     }
 
     else throw new Error('Invalid action type')
