@@ -1,6 +1,6 @@
 import { Project, Task, Subtask, ProjectHistory, ProjectMember, AIInteraction, User } from "../models";
 import { ChatOllama } from '@langchain/ollama'
-import { createDeepAgent } from 'deepagents'
+import { createAgent, tool } from "langchain";
 import * as z from 'zod'
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 
@@ -60,21 +60,21 @@ const getDetailedHistoryTool = async (project: any) => {
 }
 
 const tools = (project: any) => [
+    tool( async () => await projectDetailedStatsTool(project),
     {
         name: 'getProjectDetailedStats',
         description: 'Get project progress statistics (tasks, subtasks, percentages).',
-        func: () => projectDetailedStatsTool(project)
-    },
+    }),
+    tool( async () => getOverdueItemsTool(project),
     {
         name: 'getOverdueItems',
         description: 'Identify tasks and subtasks that are overdue.',
-        func: () => getOverdueItemsTool(project)
-    },
+    }),
+    tool( async () => await getDetailedHistoryTool(project),
     {
         name: 'getDetailedHistory',
         description: 'Get the last 20 changes made to the project.',
-        func: () => getDetailedHistoryTool(project)
-    }
+    })
 ];
 
 const reportProject: (input: any, context: any) => Promise<AIInteraction> = async (input: any, context: any) => {
@@ -91,7 +91,7 @@ const reportProject: (input: any, context: any) => Promise<AIInteraction> = asyn
             {
                 model: ProjectMember,
                 as: 'projectMemberDetails',
-                include: [{ model: User, as: 'user' }]
+                include: [{ model: User }]
             }
         ]
     });
@@ -124,33 +124,41 @@ Use the tools to dive deeper before finalizing the report.
 Current Time: ${new Date().toLocaleString()}
 `.trim();
 
-    const agent = createDeepAgent({ model: llm, tools: tools(project), systemPrompt: systemPrompt });
+    const agent = createAgent({ model: llm, tools: tools(project), systemPrompt: systemPrompt });
 
     // Fetch history for context
-    const whereClose: any = { userId: context.user.id, projectId: input.project_id, isDeleted: false };
-    if (input.parent_interaction_id) whereClose.parentInteractionId = input.parent_interaction_id;
+    let chatHistory: any[] = [];
+    if (input.parent_interaction_id) {
+        const histories = await AIInteraction.findAll({
+            where: { userId: context.user.id, projectId: input.project_id, isDeleted: false, parentInteractionId: input.parent_interaction_id },
+            order: [['createdAt', 'DESC']],
+            limit: 5,
+            raw: true
+        });
 
-    const histories = await AIInteraction.findAll({
-        where: whereClose,
-        order: [['createdAt', 'DESC']],
-        limit: 5,
-    });
-
-    const chatHistory = histories.reverse().flatMap(h => [
-        new HumanMessage(h.prompt),
-        new AIMessage(h.response)
-    ]);
+        if (histories.length > 0) {
+            chatHistory = histories.reverse().flatMap(h => [
+                new HumanMessage(h.prompt),
+                new AIMessage(h.response)
+            ]);
+        }
+    }
 
     const agentResponse = await agent.invoke({
         messages: [...chatHistory, new HumanMessage(input.prompt)],
     });
 
+    console.log({agent: agentResponse});
+    
+
     return await AIInteraction.create({
-        ...input,
+        projectId: input.project_id,
         userId: context.user.id,
+        parentInteractionId: input.parent_interaction_id,
         actionType: 'report',
-        response: typeof agentResponse === 'string' ? agentResponse : JSON.stringify(agentResponse),
-        metadata: typeof agentResponse === 'object' ? agentResponse : { content: agentResponse }
+        prompt: input.prompt,
+        response: (agentResponse as any)?.messages?.[agentResponse?.messages?.length - 1]?.content || '',
+        metadata: agentResponse //(agentResponse as any)?.messages?.[agentResponse?.messages?.length - 1]?.usage_metadata || {},
     });
 }
 
