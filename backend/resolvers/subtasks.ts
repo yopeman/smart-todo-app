@@ -113,7 +113,7 @@ export const createSubtask = async (input: any, context: any) => {
     })
     const row = created.toJSON()
     await addProjectHistory(
-        parentTask.projectId,
+        parentTask.toJSON().projectId,
         'subtask',
         row.id,
         'create',
@@ -142,7 +142,7 @@ export const updateSubtask = async (id: string, input: any, context: any) => {
 
     if (statusChanged && !otherKeys.length) {
         await addProjectHistory(
-            parentTask.projectId,
+            parentTask.toJSON().projectId,
             'subtask',
             id,
             'status change',
@@ -154,7 +154,7 @@ export const updateSubtask = async (id: string, input: any, context: any) => {
         if (statusChanged) parts.push(`status ${prev.status} → ${updated.status}`)
         if (otherKeys.length) parts.push(`fields: ${otherKeys.join(', ')}`)
         await addProjectHistory(
-            parentTask.projectId,
+            parentTask.toJSON().projectId,
             'subtask',
             id,
             'update',
@@ -181,7 +181,7 @@ export const updateSubtaskStatus = async (id: string, status: unknown, context: 
     const updated = found.toJSON()
     if (prevStatus !== updated.status) {
         await addProjectHistory(
-            parentTask.projectId,
+            parentTask.toJSON().projectId,
             'subtask',
             id,
             'status change',
@@ -204,7 +204,7 @@ export const deleteSubtask = async (id: string, context: any) => {
         deletedAt: new Date()
     })
     await addProjectHistory(
-        parentTask.projectId,
+        parentTask.toJSON().projectId,
         'subtask',
         id,
         'delete',
@@ -240,7 +240,7 @@ export const reorderSubtasks = async (subtask_order: string[], context: any) => 
     })
 
     await addProjectHistory(
-        parentTask.projectId,
+        parentTask.toJSON().projectId,
         'task',
         taskId,
         'update',

@@ -191,7 +191,7 @@ export const updateTaskStatus = async (id: string, status: unknown, context: any
 
     await assertProjectPermission({ projectId: task.toJSON().projectId, context, action: 'update' })
 
-    const prevStatus = task.status
+    const prevStatus = task.toJSON().status
     const nextStatus = mapStatusToEnum(status)
     const completedAt = nextStatus === 'DONE' ? new Date() : null
 
@@ -225,7 +225,7 @@ export const deleteTask = async (id: string, context: any) => {
         'task',
         id,
         'delete',
-        `Task "${task.title}" deleted`,
+        `Task "${task.toJSON().title}" deleted`,
         context.user.id,
     )
     return true
