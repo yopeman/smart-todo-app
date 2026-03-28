@@ -101,7 +101,6 @@ const typeDefs = readdirSync(schemaPath)
     .filter((file) => file.endsWith('.gql'))
     .map((file) => readFileSync(join(schemaPath, file), 'utf-8'))
     .join('\n')
-
 await writeFile('./schemas/schema.graphql', typeDefs)
 
 // Create WebSocket server
