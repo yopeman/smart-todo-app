@@ -17,6 +17,7 @@ import { readFileSync, readdirSync } from 'fs'
 import { join } from 'path'
 import { createServer } from 'http'
 import resolvers from './resolvers/index'
+import getSystemAnalytics from './utils/systemAnalytics'
 
 dotenv.config()
 const app = express()
@@ -130,9 +131,19 @@ app.use(
     }) as any
 )
 
+app.get('/api/analytics', async (req, res) => {
+    try {
+        const analytics = await getSystemAnalytics()
+        res.json(analytics)
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve analytics' })
+    }
+})
+
 const PORT = process.env.PORT || 7000
 httpServer.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
+    console.log(`Analytics endpoint: http://localhost:${PORT}/api/analytics`)
     console.log(`GraphQL endpoint: http://localhost:${PORT}/graphql`)
     console.log(`GraphQL subscriptions endpoint: ws://localhost:${PORT}/graphql`)
 })
