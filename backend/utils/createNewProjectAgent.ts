@@ -7,38 +7,120 @@ import { tool } from '@langchain/core/tools';
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import * as z from 'zod';
 
+const dateSchema = z.union([
+        z.date(),
+        z.string().transform((str) => {
+            // Handle YYYY-MM-DD format
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                return new Date(str + 'T00:00:00Z');
+            }
+            // Handle ISO string
+            return new Date(str);
+        }),
+        z.number().transform((num) => new Date(num)),
+        z.null()
+    ]).optional()
+
 const projectSchema = z.object({
     title: z.string().describe('The title of the project'),
     description: z.string().optional().describe('The description of the project'),
-    priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).describe('The priority of the project'),
-    urgentImportantMatrix: z.enum(['urgent & important', 'urgent & not important', 'not urgent & important', 'not urgent & not important']).describe('The urgent important matrix classification'),
+    priority: z.enum(['HIGH', 'MEDIUM', 'LOW']).optional().describe('The priority of the project'),
+    urgentImportantMatrix: z.enum(['urgent & important', 'urgent & not important', 'not urgent & important', 'not urgent & not important']).optional().describe('The urgent important matrix classification'),
     successCriteria: z.array(z.string()).optional().describe('The success criteria for the project'),
-    isPublic: z.boolean().describe('Whether the project is public'),
-    startDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The start date of the project (can be date string, Date object, timestamp number, or null)'),
-    endDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The end date of the project (can be date string, Date object, timestamp number, or null)'),
-    status: z.enum(['todo', 'in progress', 'done']).describe('The initial status of the project'),
-    completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('When the project was completed (can be date string, Date object, timestamp number, or null)'),
+    isPublic: z.boolean().optional().describe('Whether the project is public'),
+    startDate: dateSchema.optional().describe('The start date of the project (can be date string, Date object, timestamp number, or null)'),
+    endDate: dateSchema.optional().describe('The end date of the project (can be date string, Date object, timestamp number, or null)'),
+    status: z.enum(['todo', 'in progress', 'done']).optional().describe('The initial status of the project'),
+    completedAt: dateSchema.optional().describe('When the project was completed (can be date string, Date object, timestamp number, or null)'),
     tasks: z.array(z.object({
         title: z.string().describe('The title of the task'),
         description: z.string().optional().describe('The description of the task'),
-        status: z.enum(['todo', 'in progress', 'done']).describe('The status of the task'),
+        status: z.enum(['todo', 'in progress', 'done']).optional().describe('The status of the task'),
         orderWeight: z.number().optional().describe('Ordering weight for the task'),
-        dueDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The due date for the task (can be date string, Date object, timestamp number, or null)'),
-        completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('When the task was completed (can be date string, Date object, timestamp number, or null)'),
+        dueDate: dateSchema.optional().describe('The due date for the task (can be date string, Date object, timestamp number, or null)'),
+        completedAt: dateSchema.optional().describe('When the task was completed (can be date string, Date object, timestamp number, or null)'),
         subtasks: z.array(z.object({
             title: z.string().describe('The title of the subtask'),
             description: z.string().optional().describe('The description of the subtask'),
-            status: z.enum(['todo', 'in progress', 'done']).describe('The status of the subtask'),
+            status: z.enum(['todo', 'in progress', 'done']).optional().describe('The status of the subtask'),
             orderWeight: z.number().optional().describe('Ordering weight for the subtask'),
-            dueDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The due date for the subtask (can be date string, Date object, timestamp number, or null)'),
-            completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('When the subtask was completed (can be date string, Date object, timestamp number, or null)'),
+            dueDate: dateSchema.optional().describe('The due date for the subtask (can be date string, Date object, timestamp number, or null)'),
+            completedAt: dateSchema.optional().describe('When the subtask was completed (can be date string, Date object, timestamp number, or null)'),
         })).optional().describe('Subtasks for this task'),
-    })).describe('Tasks included in the project'),
+    })).optional().describe('Tasks included in the project'),
 })
 
 const createProjectTool = async (x: any, context: any) => {
-    const input = await projectSchema.parseAsync(x)
-
+    // Helper function to normalize urgentImportantMatrix to lowercase
+    const normalizeMatrix = (value: string | undefined) => {
+        if (!value) return undefined;
+        // Convert to lowercase and ensure proper format
+        const lower = value.toLowerCase();
+        if (lower.includes('urgent') && lower.includes('important')) {
+            if (lower.includes('not urgent') && lower.includes('important')) {
+                return 'not urgent & important';
+            } else if (lower.includes('urgent') && lower.includes('not important')) {
+                return 'urgent & not important';
+            } else if (lower.includes('urgent') && lower.includes('important')) {
+                return 'urgent & important';
+            } else if (lower.includes('not urgent') && lower.includes('not important')) {
+                return 'not urgent & not important';
+            }
+        }
+        return value; // Return original if no match
+    };
+    
+    // Helper function to normalize date strings
+    const normalizeDate = (dateStr: string | Date | number | null | undefined) => {
+        if (!dateStr) return null;
+        if (dateStr instanceof Date) return dateStr;
+        if (typeof dateStr === 'number') return new Date(dateStr);
+        if (typeof dateStr === 'string') {
+            if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return new Date(dateStr + 'T00:00:00Z');
+            }
+            return new Date(dateStr);
+        }
+        return null;
+    };
+    
+    // Process the input
+    const processedInput = {
+        ...x,
+        urgentImportantMatrix: normalizeMatrix(x.urgentImportantMatrix),
+        startDate: normalizeDate(x.startDate),
+        endDate: normalizeDate(x.endDate),
+        tasks: x.tasks?.map((task: any) => ({
+            ...task,
+            urgentImportantMatrix: normalizeMatrix(task.urgentImportantMatrix),
+            dueDate: normalizeDate(task.dueDate),
+            completedAt: normalizeDate(task.completedAt),
+            subtasks: task.subtasks?.map((subtask: any) => ({
+                ...subtask,
+                urgentImportantMatrix: normalizeMatrix(subtask.urgentImportantMatrix),
+                dueDate: normalizeDate(subtask.dueDate),
+                completedAt: normalizeDate(subtask.completedAt),
+            }))
+        }))
+    };
+    
+    // Set defaults for missing required fields
+    const defaultPriority = 'MEDIUM';
+    const defaultUrgentImportantMatrix = 'not urgent & important';
+    
+    const inputWithDefaults = {
+        ...processedInput,
+        priority: processedInput.priority || defaultPriority,
+        urgentImportantMatrix: processedInput.urgentImportantMatrix || defaultUrgentImportantMatrix,
+        tasks: processedInput.tasks?.map((task: any) => ({
+            ...task,
+            priority: task.priority || processedInput.priority || defaultPriority,
+            urgentImportantMatrix: task.urgentImportantMatrix || processedInput.urgentImportantMatrix || defaultUrgentImportantMatrix,
+        }))
+    };
+    
+    const input = await projectSchema.parseAsync(inputWithDefaults);
+    
     const newProject = await Project.create({
         ownerId: context.user.id,
         title: input.title,
@@ -53,17 +135,18 @@ const createProjectTool = async (x: any, context: any) => {
     })
 
     await addProjectHistory(
-        newProject.id,
+        newProject.toJSON().id,
         'project',
-        newProject.id,
+        newProject.toJSON().id,
         'create',
-        `Project "${newProject.title}" created via AI`,
+        `Project "${newProject.toJSON().title}" created via AI`,
         context.user.id,
     )
 
-    for (const task of input.tasks) {
+    if (input.tasks) {
+        for (const task of input.tasks) {
         const newTask = await Task.create({
-            projectId: newProject.id,
+            projectId: newProject.toJSON().id,
             title: task.title,
             description: task.description,
             status: task.status,
@@ -72,18 +155,18 @@ const createProjectTool = async (x: any, context: any) => {
         })
 
         await addProjectHistory(
-            newProject.id,
+            newProject.toJSON().id,
             'task',
-            newTask.id,
+            newTask.toJSON().id,
             'create',
-            `Task "${newTask.title}" created via AI`,
+            `Task "${newTask.toJSON().title}" created via AI`,
             context.user.id,
         )
 
         if (task.subtasks) {
             for (const subtask of task.subtasks) {
                 const newSubtask = await Subtask.create({
-                    taskId: newTask.id,
+                    taskId: newTask.toJSON().id,
                     title: subtask.title,
                     description: subtask.description,
                     status: subtask.status,
@@ -91,18 +174,19 @@ const createProjectTool = async (x: any, context: any) => {
                     dueDate: subtask.dueDate,
                 })
                 await addProjectHistory(
-                    newProject.id,
+                    newProject.toJSON().id,
                     'subtask',
-                    newSubtask.id,
+                    newSubtask.toJSON().id,
                     'create',
-                    `Subtask "${newSubtask.title}" created via AI`,
+                    `Subtask "${newSubtask.toJSON().title}" created via AI`,
                     context.user.id,
                 )
             }
         }
     }
+    }
 
-    return `Project "${newProject.title}" successfully created with ID: ${newProject.id}`
+    return `Project "${newProject.toJSON().title}" successfully created with ID: ${newProject.toJSON().id}`
 }
 
 const currentTimestamp = () => {

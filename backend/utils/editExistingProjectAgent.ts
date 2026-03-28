@@ -7,6 +7,19 @@ import { tool } from '@langchain/core/tools';
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import * as z from 'zod';
 
+const dateSchema = z.union([
+        z.date(),
+        z.string().transform((str) => {
+            // Handle YYYY-MM-DD format
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                return new Date(str + 'T00:00:00Z');
+            }
+            // Handle ISO string
+            return new Date(str);
+        }),
+        z.number().transform((num) => new Date(num)),
+        z.null()
+    ]).optional()
 
 const projectUpdateSchema = z.object({
     id: z.string().describe('The id of the project to update'),
@@ -16,12 +29,12 @@ const projectUpdateSchema = z.object({
     urgentImportantMatrix: z.enum(['urgent & important', 'urgent & not important', 'not urgent & important', 'not urgent & not important']).optional().describe('The urgent important matrix of the project'),
     successCriteria: z.array(z.string()).optional().describe('The success criteria of the project'),
     isPublic: z.boolean().optional().describe('The is public of the project'),
-    startDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The start date of the project (can be date string, Date object, timestamp number, or null)'),
-    endDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The end date of the project (can be date string, Date object, timestamp number, or null)'),
+    startDate: dateSchema.optional().describe('The start date of the project (can be date string, Date object, timestamp number, or null)'),
+    endDate: dateSchema.optional().describe('The end date of the project (can be date string, Date object, timestamp number, or null)'),
     status: z.enum(['todo', 'in progress', 'done']).optional().describe('The status of the project'),
-    completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The completed at of the project (can be date string, Date object, timestamp number, or null)'),
+    completedAt: dateSchema.optional().describe('The completed at of the project (can be date string, Date object, timestamp number, or null)'),
     isDeleted: z.boolean().optional().describe('The is deleted of the project'),
-    deletedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The deleted at of the project (can be date string, Date object, timestamp number, or null)'),
+    deletedAt: dateSchema.optional().describe('The deleted at of the project (can be date string, Date object, timestamp number, or null)'),
 })
 
 const taskCreateSchema = z.object({
@@ -30,8 +43,8 @@ const taskCreateSchema = z.object({
     description: z.string().optional().describe('The description of the task'),
     status: z.enum(['todo', 'in progress', 'done']).optional().describe('The status of the task'),
     orderWeight: z.number().optional().describe('The order weight of the task'),
-    dueDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The due date of the task (can be date string, Date object, timestamp number, or null)'),
-    completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The completed at of the task (can be date string, Date object, timestamp number, or null)'),
+    dueDate: dateSchema.optional().describe('The due date of the task (can be date string, Date object, timestamp number, or null)'),
+    completedAt: dateSchema.optional().describe('The completed at of the task (can be date string, Date object, timestamp number, or null)'),
 })
 
 const subtaskCreateSchema = z.object({
@@ -40,8 +53,8 @@ const subtaskCreateSchema = z.object({
     description: z.string().optional().describe('The description of the subtask'),
     status: z.enum(['todo', 'in progress', 'done']).optional().describe('The status of the subtask'),
     orderWeight: z.number().optional().describe('The order weight of the subtask'),
-    dueDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The due date of the subtask (can be date string, Date object, timestamp number, or null)'),
-    completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The completed at of the subtask (can be date string, Date object, timestamp number, or null)'),
+    dueDate: dateSchema.optional().describe('The due date of the subtask (can be date string, Date object, timestamp number, or null)'),
+    completedAt: dateSchema.optional().describe('The completed at of the subtask (can be date string, Date object, timestamp number, or null)'),
 })
 
 const taskUpdateSchema = z.object({
@@ -51,10 +64,10 @@ const taskUpdateSchema = z.object({
     description: z.string().optional().describe('The description of the task'),
     status: z.enum(['todo', 'in progress', 'done']).optional().describe('The status of the task'),
     orderWeight: z.number().optional().describe('The order weight of the task'),
-    dueDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The due date of the task (can be date string, Date object, timestamp number, or null)'),
-    completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The completed at of the task (can be date string, Date object, timestamp number, or null)'),
+    dueDate: dateSchema.optional().describe('The due date of the task (can be date string, Date object, timestamp number, or null)'),
+    completedAt: dateSchema.optional().describe('The completed at of the task (can be date string, Date object, timestamp number, or null)'),
     isDeleted: z.boolean().optional().describe('The is deleted of the task'),
-    deletedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The deleted at of the task (can be date string, Date object, timestamp number, or null)'),
+    deletedAt: dateSchema.optional().describe('The deleted at of the task (can be date string, Date object, timestamp number, or null)'),
 })
 
 const subtaskUpdateSchema = z.object({
@@ -64,10 +77,10 @@ const subtaskUpdateSchema = z.object({
     description: z.string().optional().describe('The description of the subtask'),
     status: z.enum(['todo', 'in progress', 'done']).optional().describe('The status of the subtask'),
     orderWeight: z.number().optional().describe('The order weight of the subtask'),
-    dueDate: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The due date of the subtask (can be date string, Date object, timestamp number, or null)'),
-    completedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The completed at of the subtask (can be date string, Date object, timestamp number, or null)'),
+    dueDate: dateSchema.optional().describe('The due date of the subtask (can be date string, Date object, timestamp number, or null)'),
+    completedAt: dateSchema.optional().describe('The completed at of the subtask (can be date string, Date object, timestamp number, or null)'),
     isDeleted: z.boolean().optional().describe('The is deleted of the subtask'),
-    deletedAt: z.union([z.date(), z.string().transform((str) => new Date(str)), z.number().transform((num) => new Date(num)), z.null()]).optional().describe('The deleted at of the subtask (can be date string, Date object, timestamp number, or null)'),
+    deletedAt: dateSchema.optional().describe('The deleted at of the subtask (can be date string, Date object, timestamp number, or null)'),
 })
 
 
