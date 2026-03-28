@@ -78,6 +78,7 @@ type Subtask {
 
   # Relationships
   task: Task!
+  histories: [ProjectHistory!]!
 }
 
 type ProjectMember {

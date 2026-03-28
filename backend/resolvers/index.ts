@@ -110,9 +110,8 @@ const resolvers = {
     Task: taskResolver.taskType,
     Subtask: subtaskResolver.subtaskType,
     ProjectMember: projectMemberResolver.projectMemberType,
-    AIInteraction: aiInteractionResolver.aiInteractionType,
-
     ProjectHistory: projectHistoryResolver.projectHistoryType,
+    AIInteraction: aiInteractionResolver.aiInteractionType,
 }
 
 export default resolvers

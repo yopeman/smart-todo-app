@@ -114,10 +114,10 @@ export const tasks = async (project_id: string | undefined, status: string | und
         where.projectId = { [Op.in]: visibleProjects.map((p: any) => p.id) }
     }
 
-    return await Task.findAll({ 
-        where, 
+    return await Task.findAll({
+        where,
         order: [['orderWeight', 'ASC'], ['createdAt', 'ASC']],
-        raw: true 
+        raw: true
     })
 }
 
@@ -216,7 +216,7 @@ export const deleteTask = async (id: string, context: any) => {
 
     await assertProjectPermission({ projectId: task.toJSON().projectId, context, action: 'delete' })
 
-    await task.update({ 
+    await task.update({
         isDeleted: true,
         deletedAt: new Date()
     })
@@ -291,12 +291,12 @@ export const taskType = {
             order: [['orderWeight', 'ASC'], ['createdAt', 'ASC']],
             raw: true,
         }),
-    histories: async (task: any) => await ProjectHistory.findAll({ 
-        where: { 
-            entityId: task.id, 
+    histories: async (task: any) => await ProjectHistory.findAll({
+        where: {
+            entityId: task.id,
             entityType: 'task',
-            isDeleted: false 
-        }, 
-        raw: true 
+            isDeleted: false
+        },
+        raw: true
     })
 }

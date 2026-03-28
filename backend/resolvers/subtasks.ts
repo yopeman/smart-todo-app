@@ -1,4 +1,4 @@
-import { Subtask, Task, Project, ProjectMember } from '../models'
+import { Subtask, Task, Project, ProjectMember, ProjectHistory } from '../models'
 import { Op } from 'sequelize'
 import PERMISSIONS from '../utils/projectPermissions'
 import addProjectHistory from '../utils/addProjectHistory'
@@ -266,5 +266,13 @@ export const subtaskType = {
     deleted_at: (subtask: any) => subtask.deletedAt,
 
     task: async (subtask: any) => await Task.findByPk(subtask.taskId, { raw: true }),
+    histories: async (task: any) => await ProjectHistory.findAll({ 
+        where: { 
+            entityId: task.id, 
+            entityType: 'subtask',
+            isDeleted: false 
+        }, 
+        raw: true 
+    })
 }
 
