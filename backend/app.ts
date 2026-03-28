@@ -18,6 +18,7 @@ import { join } from 'path'
 import { createServer } from 'http'
 import resolvers from './resolvers/index'
 import getSystemAnalytics from './utils/systemAnalytics'
+import { writeFile } from 'fs/promises'
 
 dotenv.config()
 const app = express()
@@ -76,12 +77,12 @@ app.get('/auth/google/callback', passport.authenticate('google', {
     // successMessage: true,
     session: false
 }), (req, res) => {
-    
+
     if (!req.user) {
         return res.status(401).json({ error: 'Authentication failed' })
     }
 
-    const token = createUserToken(req.user as User)    
+    const token = createUserToken(req.user as User)
 
     return res.redirect(`http://localhost:5173?token=${token}`)
     // return res.status(200).json({ token: createUserToken(req.user as User) })
@@ -100,6 +101,8 @@ const typeDefs = readdirSync(schemaPath)
     .filter((file) => file.endsWith('.gql'))
     .map((file) => readFileSync(join(schemaPath, file), 'utf-8'))
     .join('\n')
+
+await writeFile('./schemas/schema.graphql', typeDefs)
 
 // Create WebSocket server
 const wsServer = new WebSocketServer({

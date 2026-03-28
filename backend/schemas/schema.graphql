@@ -1,0 +1,356 @@
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum UrgentImportantMatrix {
+  URGENT_IMPORTANT
+  URGENT_NOT_IMPORTANT
+  NOT_URGENT_IMPORTANT
+  NOT_URGENT_NOT_IMPORTANT
+}
+
+enum Status {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum ProjectRole {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum EntityType {
+  PROJECT
+  TASK
+  SUBTASK
+  MEMBER
+}
+
+enum ChangeType {
+  CREATE
+  UPDATE
+  DELETE
+  STATUS_CHANGE
+  ROLE_CHANGE
+}
+
+enum ActionType {
+  CREATE # for creating project and its tasks
+  EDIT # for editing project and its tasks
+  REPORT # for generating project and its tasks report
+}
+
+input CreateProjectInput {
+  title: String!
+  description: String
+  priority: Priority
+  urgent_important_matrix: UrgentImportantMatrix
+  success_criteria: String
+  is_public: Boolean
+  start_date: DateTime
+  end_date: DateTime
+  status: Status
+}
+
+input UpdateProjectInput {
+  title: String
+  description: String
+  priority: Priority
+  urgent_important_matrix: UrgentImportantMatrix
+  success_criteria: [String!]
+  is_public: Boolean
+  start_date: DateTime
+  end_date: DateTime
+  status: Status
+}
+
+input CreateTaskInput {
+  project_id: ID!
+  title: String!
+  description: String
+  status: Status
+  order_weight: Float
+  due_date: DateTime
+}
+
+input UpdateTaskInput {
+  title: String
+  description: String
+  status: Status
+  order_weight: Float
+  due_date: DateTime
+}
+
+input CreateSubtaskInput {
+  task_id: ID!
+  title: String!
+  description: String
+  status: Status
+  order_weight: Float
+  due_date: DateTime
+}
+
+input UpdateSubtaskInput {
+  title: String
+  description: String
+  status: Status
+  order_weight: Float
+  due_date: DateTime
+}
+
+input AddProjectMemberInput {
+  project_id: ID!
+  user_id: ID!
+  role: ProjectRole!
+}
+
+input UpdateProjectMemberInput {
+  role: ProjectRole!
+}
+
+input CreateAIInteractionInput {
+  parent_interaction_id: ID
+  project_id: ID
+  prompt: String!
+  action_type: ActionType!
+}
+
+type Mutation {
+  # User mutations
+  deleteMe: Boolean!
+  
+  # Project mutations
+  createProject(input: CreateProjectInput!): Project!
+  updateProject(id: ID!, input: UpdateProjectInput!): Project!
+  deleteProject(id: ID!): Boolean!
+  
+  # Task mutations
+  createTask(input: CreateTaskInput!): Task!
+  updateTask(id: ID!, input: UpdateTaskInput!): Task!
+  deleteTask(id: ID!): Boolean!
+  reorderTasks(task_order: [ID!]!): [Task!]!
+
+  # Subtask mutations
+  createSubtask(input: CreateSubtaskInput!): Subtask!
+  updateSubtask(id: ID!, input: UpdateSubtaskInput!): Subtask!
+  deleteSubtask(id: ID!): Boolean!
+  reorderSubtasks(subtask_order: [ID!]!): [Subtask!]!
+  
+  # Project member mutations
+  addProjectMember(input: AddProjectMemberInput!): ProjectMember!
+  updateProjectMember(id: ID!, input: UpdateProjectMemberInput!): ProjectMember!
+  removeProjectMember(id: ID!): Boolean!
+  
+  # AI interaction mutations
+  createAIInteraction(input: CreateAIInteractionInput!): AIInteraction!
+  
+  # Status mutations
+  updateProjectStatus(id: ID!, status: Status!): Project!
+  updateTaskStatus(id: ID!, status: Status!): Task!
+  updateSubtaskStatus(id: ID!, status: Status!): Subtask!
+}
+
+type Query {
+  # User queries
+  user(id: ID!): User
+  users(
+    name: String
+    email: String
+  ): [User!]!
+  me: User
+  
+  # Project queries
+  project(id: ID!): Project
+  projects(
+    status: Status
+    is_public: Boolean
+    owner_id: ID
+    title: String
+  ): [Project!]!
+  my_projects: [Project!]!
+  shared_projects: [Project!]!
+  public_projects: [Project!]!
+  
+  # Task queries
+  task(id: ID!): Task
+  tasks(
+    project_id: ID!
+    status: Status
+  ): [Task!]!
+
+  # Subtask queries
+  subtask(id: ID!): Subtask
+  subtasks(
+    task_id: ID!
+    status: Status
+  ): [Subtask!]!
+  
+  # Project member queries
+  projectMembers(project_id: ID!): [ProjectMember!]!
+  
+  # Project history queries
+  projectHistories(
+    project_id: ID!
+    entity_type: EntityType
+    change_type: ChangeType
+  ): [ProjectHistory!]!
+  
+  # AI interaction queries
+  aiInteractions(
+    project_id: ID
+    action_type: ActionType
+  ): [AIInteraction!]!
+  aiInteraction(id: ID!): AIInteraction
+}
+
+scalar DateTime
+scalar JSON
+
+type Subscription {
+  projectUpdated(project_id: ID!): Project!
+  projectHistoryAdded(project_id: ID!): ProjectHistory!
+}
+
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  avatar: String
+  provider: String!
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  owned_projects: [Project!]!
+  member_projects: [ProjectMember!]!
+  ai_interactions: [AIInteraction!]!
+  project_histories: [ProjectHistory!]!
+}
+
+type Project {
+  id: ID!
+  title: String!
+  owner_id: ID!
+  description: String
+  priority: Priority
+  urgent_important_matrix: UrgentImportantMatrix
+  success_criteria: [String]
+  is_public: Boolean!
+  start_date: DateTime
+  end_date: DateTime
+  status: Status!
+  completed_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  owner: User!
+  tasks: [Task!]!
+  members: [ProjectMember!]!
+  histories: [ProjectHistory!]!
+  ai_interactions: [AIInteraction!]!
+}
+
+type Task {
+  id: ID!
+  project_id: ID!
+  title: String!
+  description: String
+  status: Status!
+  order_weight: Float!
+  due_date: DateTime
+  completed_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  project: Project!
+  subtasks: [Subtask!]!
+  histories: [ProjectHistory!]!
+}
+
+type Subtask {
+  id: ID!
+  task_id: ID!
+  title: String!
+  description: String
+  status: Status!
+  order_weight: Float!
+  due_date: DateTime
+  completed_at: DateTime
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+
+  # Relationships
+  task: Task!
+}
+
+type ProjectMember {
+  id: ID!
+  project_id: ID!
+  user_id: ID!
+  role: ProjectRole!
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  project: Project!
+  user: User!
+}
+
+type ProjectHistory {
+  id: ID!
+  project_id: ID!
+  entity_type: EntityType!
+  entity_id: ID!
+  change_type: ChangeType!
+  change_summary: String!
+  changed_by: ID!
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  project: Project
+  task: Task
+  subtask: Subtask
+  member: ProjectMember
+  changer: User!
+  parent_project: Project!
+}
+
+type AIInteraction {
+  id: ID!
+  user_id: ID!
+  parent_interaction_id: ID
+  project_id: ID
+  prompt: String!
+  response: String
+  action_type: ActionType!
+  metadata: JSON
+  created_at: DateTime!
+  updated_at: DateTime!
+  is_deleted: Boolean!
+  deleted_at: DateTime
+  
+  # Relationships
+  user: User!
+  parent_interaction: AIInteraction
+  project: Project
+  child_interactions: [AIInteraction!]!
+}
