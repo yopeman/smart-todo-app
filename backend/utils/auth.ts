@@ -3,9 +3,8 @@ import User from '../models/User'
 import type { Request, Response, NextFunction } from 'express'
 
 export const createUserToken = (user: User) => {
-    const data = user.toJSON()
-    delete (data as any).providerId
-    return jwt.sign(data, process.env.JWT_SECRET!, { expiresIn: '180d' })
+    delete (user as any).providerId
+    return jwt.sign(user, process.env.JWT_SECRET!, { expiresIn: '180d' })
 }
 
 export const getUserFromToken = async (token: string) => {

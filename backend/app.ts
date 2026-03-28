@@ -69,13 +69,29 @@ passport.use(
 
 app.use(passport.initialize())
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'], session: false }))
-app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/', session: false }), (req, res) => {
+app.get('/auth/google/callback', passport.authenticate('google', {
+    failureRedirect: '/auth/google/failure',
+    failureMessage: true,
+    // successRedirect: '/auth/google/success',
+    // successMessage: true,
+    session: false
+}), (req, res) => {
+    
     if (!req.user) {
         return res.status(401).json({ error: 'Authentication failed' })
     }
 
-    // return res.redirect(`http://localhost:5173?token=${createUserToken(req.user as User)}`)
-    return res.status(200).json({ token: createUserToken(req.user as User) })
+    const token = createUserToken(req.user as User)    
+
+    return res.redirect(`http://localhost:5173?token=${token}`)
+    // return res.status(200).json({ token: createUserToken(req.user as User) })
+})
+
+app.get('/auth/google/success', (req, res) => {
+    return res.status(200).json({ message: 'Authentication successful', user: req.user, data: req.query })
+})
+app.get('/auth/google/failure', (req, res) => {
+    return res.status(401).json({ error: 'Authentication failed', data: req.query })
 })
 
 // Setup Apollo Server
