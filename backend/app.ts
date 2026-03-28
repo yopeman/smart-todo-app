@@ -139,8 +139,6 @@ app.use(
         context: async ({ req, res }) => {
             try {
                 const auth = req.headers.authorization
-                console.log({auth});
-                
                 const token = auth?.split(' ')[1]
                 const user = await getUserFromToken(token!)
                 return { user, req, res }
