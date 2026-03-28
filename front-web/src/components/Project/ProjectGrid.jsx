@@ -8,13 +8,6 @@ const ProjectGrid = () => {
   const { projectFilter, layout, selectedProjectId, searchQuery } = useAppContext();
   const { data, loading, error } = useQuery(GET_PROJECTS);
 
-  if (loading) return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-      {[1, 2, 3].map(i => <div key={i} className="h-64 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700"></div>)}
-    </div>
-  );
-  if (error) return <div className="text-red-500 text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800">Error loading projects! Please try again.</div>;
-
   const rawProjects = data ? data[projectFilter] : [];
 
   const projects = useMemo(() => {
@@ -34,6 +27,15 @@ const ProjectGrid = () => {
     }
     return p;
   }, [rawProjects, searchQuery, selectedProjectId]);
+
+  if (loading) return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+      {[1, 2, 3].map(i => <div key={i} className="h-64 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700"></div>)}
+    </div>
+  );
+  if (error) return <div className="text-red-500 text-center p-8 bg-red-50 dark:bg-red-900/20 rounded-2xl border border-red-100 dark:border-red-800">Error loading projects! Please try again.</div>;
+
+
 
   if (projects.length === 0) {
     return (
