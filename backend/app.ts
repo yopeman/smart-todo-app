@@ -139,11 +139,13 @@ app.use(
         context: async ({ req, res }) => {
             try {
                 const auth = req.headers.authorization
+                console.log({auth});
+                
                 const token = auth?.split(' ')[1]
                 const user = await getUserFromToken(token!)
                 return { user, req, res }
             } catch (error) {
-                throw error
+                return res.status(401).json({ error: 'Unauthorized' })
             }
         },
     }) as any

@@ -1,62 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import Header from './components/Header'
-import Hero from './components/Hero'
-import Features from './components/Features'
-import Analytics from './components/Analytics'
-import HowItWorks from './components/HowItWorks'
-import CTA from './components/CTA'
-import Footer from './components/Footer'
-import Dashboard from './components/Dashboard'
+import React from 'react';
+import MainLayout from './components/Layout/MainLayout';
+import { useAppContext } from './context/AppContext';
+import ProjectGrid from './components/Project/ProjectGrid';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    // Check for token in URL
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
-
-    if (token) {
-      localStorage.setItem('auth_token', token);
-      // Change title for visual verification
-      document.title = "Smart To Do - Authenticated";
-      // Clear token from URL
-      window.history.replaceState({}, document.title, "/");
-      setIsLoggedIn(true);
-    } else {
-      // Check if already logged in via localStorage
-      const storedToken = localStorage.getItem('auth_token');
-      if (storedToken) {
-        setIsLoggedIn(true);
-      }
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    document.title = "Smart To Do - AI-Powered Task Management";
-    setIsLoggedIn(false);
-  };
-
-
-  if (isLoggedIn) {
-    return <Dashboard logout={handleLogout} />;
-  }
+  const { projectFilter } = useAppContext();
 
   return (
-    <div className="app">
-      <Header />
-      <Hero />
-      <Features />
-      <div id="analytics">
-        <Analytics />
+    <MainLayout>
+      <Toaster position="top-right" toastOptions={{ className: 'dark:bg-gray-800 dark:text-white border dark:border-gray-700 shadow-lg' }} />
+      <div className="max-w-7xl mx-auto animate-fade-in">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-extrabold capitalize text-gray-800 dark:text-gray-100 tracking-tight">
+            {projectFilter.replace('_', ' ')}
+          </h1>
+        </div>
+        <ProjectGrid />
       </div>
-      <HowItWorks />
-      <CTA />
-      <Footer />
-    </div>
-  )
+    </MainLayout>
+  );
 }
 
-export default App
-
+export default App;
