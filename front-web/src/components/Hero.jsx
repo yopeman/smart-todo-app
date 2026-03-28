@@ -1,91 +1,81 @@
-import './Hero.css'
+
+import { API_BASE_URL } from '../config/constant'
 
 function Hero() {
+
   return (
-    <section className="hero">
-      <div className="hero-container">
-        <div className="hero-badge">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 1l2 6h6l-5 4 2 6-5-4-5 4 2-6-5-4h6z" fill="currentColor" />
-          </svg>
-          <span>AI-Powered Task Management</span>
-        </div>
+    <section className="py-24 bg-[#0F172A] text-white relative overflow-hidden">
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[120px] -z-10"></div>
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="flex flex-col lg:flex-row items-center gap-16">
+          <div className="flex-1 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 bg-blue-500/10 text-blue-400 px-4 py-2 rounded-full text-sm font-semibold mb-8 border border-blue-500/20 backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+              <span>AI-Powered Task Management</span>
+            </div>
 
-        <h1 className="hero-title">
-          Manage Tasks Smarter
-          <br />
-          <span className="gradient-text">With AI & Voice</span>
-        </h1>
+            <h1 className="text-6xl md:text-7xl font-extrabold text-white mb-8 leading-[1.1] tracking-tight">
+              Manage Tasks
+              <br />
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">Smarter with AI</span>
+            </h1>
 
-        <p className="hero-description">
-          Create, update, and organize projects effortlessly using AI assistance and voice commands.
-          Collaborate with your team in real-time and let AI handle the heavy lifting.
-        </p>
+            <p className="text-xl text-gray-400 mb-12 max-w-2xl leading-relaxed">
+              Experience the next generation of productivity. Orchestrate your workflow with AI-driven insights, voice precision, and effortless real-time collaboration.
+            </p>
 
-        <div className="hero-actions">
-          <button className="btn-hero-primary">
-            Get Started Free
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M5 10h10M10 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </button>
-          <button className="btn-hero-secondary">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M6.5 5.5l8 4.5-8 4.5V5.5z" />
-            </svg>
-            Watch Demo
-          </button>
-        </div>
+            <div className="flex flex-col sm:flex-row gap-5 justify-center lg:justify-start">
+              <a 
+                href={`${API_BASE_URL}/auth/google`}
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all duration-300 shadow-xl shadow-blue-500/25"
+              >
+                Get Started Free
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.5" className="transition-transform duration-300 group-hover:translate-x-1">
+                  <path d="M5 10h10M10 5l5 5-5 5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </a>
 
-        <div className="hero-stats">
-          <div className="stat">
-            <div className="stat-value">10K+</div>
-            <div className="stat-label">Active Users</div>
+              <button className="group inline-flex items-center gap-3 px-8 py-4 bg-white/5 text-white font-bold rounded-2xl hover:bg-white/10 transition-all duration-300 border border-white/10 backdrop-blur-sm">
+                Watch Demo
+              </button>
+            </div>
+
+            <div className="flex flex-wrap justify-center lg:justify-start gap-10 mt-16">
+              <div>
+                <div className="text-4xl font-black text-white tracking-tighter">10K+</div>
+                <div className="text-gray-500 font-medium mt-1">Active Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-black text-white tracking-tighter">50K+</div>
+                <div className="text-gray-500 font-medium mt-1">Tasks Created</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-black text-white tracking-tighter">95%</div>
+                <div className="text-gray-500 font-medium mt-1">Satisfaction</div>
+              </div>
+            </div>
           </div>
-          <div className="stat-divider"></div>
-          <div className="stat">
-            <div className="stat-value">50K+</div>
-            <div className="stat-label">Tasks Created</div>
-          </div>
-          <div className="stat-divider"></div>
-          <div className="stat">
-            <div className="stat-value">95%</div>
-            <div className="stat-label">Satisfaction</div>
-          </div>
-        </div>
 
-        <div className="hero-image">
-          <div className="hero-image-placeholder">
-            <svg width="100%" height="100%" viewBox="0 0 800 500" fill="none">
-              <rect width="800" height="500" rx="12" fill="var(--bg-secondary)" />
-              <rect x="40" y="40" width="720" height="60" rx="8" fill="var(--bg)" />
-              <rect x="60" y="55" width="200" height="30" rx="4" fill="var(--primary)" opacity="0.2" />
-              <rect x="40" y="120" width="340" height="340" rx="8" fill="var(--bg)" />
-              <rect x="60" y="140" width="120" height="20" rx="4" fill="var(--text-light)" opacity="0.3" />
-              <rect x="60" y="175" width="300" height="12" rx="4" fill="var(--border)" />
-              <circle cx="75" cy="215" r="8" fill="var(--accent)" />
-              <rect x="95" y="207" width="250" height="16" rx="4" fill="var(--text)" opacity="0.2" />
-              <circle cx="75" cy="255" r="8" fill="var(--border)" />
-              <rect x="95" y="247" width="220" height="16" rx="4" fill="var(--text)" opacity="0.2" />
-              <circle cx="75" cy="295" r="8" fill="var(--border)" />
-              <rect x="95" y="287" width="200" height="16" rx="4" fill="var(--text)" opacity="0.2" />
-              <rect x="400" y="120" width="360" height="220" rx="8" fill="var(--bg)" />
-              <rect x="420" y="140" width="140" height="20" rx="4" fill="var(--text-light)" opacity="0.3" />
-              <rect x="420" y="175" width="320" height="40" rx="6" fill="var(--accent)" opacity="0.1" />
-              <rect x="435" y="185" width="100" height="20" rx="4" fill="var(--accent)" opacity="0.4" />
-              <rect x="420" y="230" width="320" height="40" rx="6" fill="var(--primary)" opacity="0.1" />
-              <rect x="435" y="240" width="120" height="20" rx="4" fill="var(--primary)" opacity="0.4" />
-              <rect x="420" y="285" width="320" height="40" rx="6" fill="var(--border)" opacity="0.3" />
-              <rect x="400" y="360" width="360" height="100" rx="8" fill="var(--bg)" />
-              <circle cx="560" cy="410" r="30" fill="url(#gradient)" />
-              <path d="M555 410l5 5 10-10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              <defs>
-                <linearGradient id="gradient" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="var(--gradient-start)" />
-                  <stop offset="100%" stopColor="var(--gradient-end)" />
-                </linearGradient>
-              </defs>
-            </svg>
+          <div className="flex-1 relative">
+            <div className="bg-gradient-to-br from-blue-600/20 to-indigo-600/20 rounded-[3rem] p-1.5 backdrop-blur-3xl shadow-2xl">
+
+              <div className="bg-[#0F172A] rounded-[2.8rem] p-10 border border-white/10">
+                <div className="aspect-[4/3] bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-3xl flex items-center justify-center border border-white/5 relative overflow-hidden group">
+                  <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+                  <div className="text-center relative z-10">
+                    <div className="w-20 h-20 bg-blue-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-500/40 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <line x1="9" y1="9" x2="15" y2="9" />
+                        <line x1="9" y1="15" x2="15" y2="15" />
+                      </svg>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-3">Smart Dashboard</h3>
+                    <p className="text-gray-400 px-4">Visualize your productivity with AI-powered insights</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

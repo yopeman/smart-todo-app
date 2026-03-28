@@ -1,4 +1,3 @@
-import './Features.css'
 
 function Features() {
   const features = [
@@ -74,21 +73,22 @@ function Features() {
   ]
 
   return (
-    <section id="features" className="features">
-      <div className="features-container">
-        <div className="section-header">
-          <h2>Everything You Need</h2>
-          <p>Powerful features to supercharge your productivity</p>
+    <section id="features" className="py-24 bg-[#0F172A] relative overflow-hidden">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-blue-600/5 rounded-full blur-[160px] -z-10"></div>
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="text-center mb-20">
+          <h2 className="text-5xl font-black text-white mb-6 tracking-tight">Everything You Need</h2>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">Powerful features to supercharge your productivity</p>
         </div>
 
-        <div className="features-grid">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="feature-card">
-              <div className="feature-icon">
+            <div key={index} className="group bg-white/5 p-10 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition-all duration-500 hover:-translate-y-2 hover:border-white/20 backdrop-blur-sm">
+              <div className="w-14 h-14 bg-blue-600/10 rounded-2xl flex items-center justify-center text-blue-400 mb-8 group-hover:scale-110 transition-transform duration-500 border border-blue-500/20">
                 {feature.icon}
               </div>
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
+              <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
+              <p className="text-gray-400 leading-relaxed text-lg">{feature.description}</p>
             </div>
           ))}
         </div>
